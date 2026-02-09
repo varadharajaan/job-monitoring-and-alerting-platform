@@ -1,0 +1,14 @@
+// ═══════════════════════════════════════════════════════════════════
+//  platform:schema — Flyway database migrations (shared across services)
+//  This is a plain JAR containing SQL migrations, not a bootable app.
+// ═══════════════════════════════════════════════════════════════════
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // Flyway core for migration engine
+    api 'org.flywaydb:flyway-core:10.11.0'
+    api 'org.flywaydb:flyway-database-postgresql:10.11.0'
+}
