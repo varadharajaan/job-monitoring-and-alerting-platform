@@ -1,0 +1,22 @@
+# Production overrides — all values from environment variables
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:30}
+      minimum-idle: ${DB_POOL_MIN_IDLE:10}
+  jpa:
+    show-sql: false
+
+platform:
+  s3:
+    enabled: true
+  kafka:
+    topics:
+      default-replicas: ${KAFKA_DEFAULT_REPLICAS:3}
+    listener:
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:6}
+
+logging:
+  level:
+    com.jobmonitor: INFO
+    root: WARN

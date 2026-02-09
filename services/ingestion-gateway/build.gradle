@@ -1,0 +1,8 @@
+apply from: "$rootDir/buildSrc/spring-boot-service.gradle"
+
+dependencies {
+    implementation project(':platform:common')
+    
+    // Rate limiting with bucket4j
+    implementation 'com.bucket4j:bucket4j-core:8.10.1'
+}
