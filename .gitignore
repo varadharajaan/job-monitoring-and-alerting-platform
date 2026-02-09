@@ -1,0 +1,74 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Job Monitoring & Alerting Platform — Gradle Multi-Module Monorepo
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Build Outputs ──
+build/
+!build/*.gradle
+out/
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ── Gradle ──
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# ── IDE ──
+.idea/
+*.iml
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+.factorypath
+*.launch
+.nb-gradle/
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ──
+logs/
+*.log
+*.jsonl
+
+# ── Environment / Secrets ──
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+
+# ── Spring ──
+spring-shell.log
+
+# ── Coverage / Reports ──
+jacoco/
+coverage/
+test-results/
+reports/
+
+# ── Node (ui/web-console) ──
+node_modules/
+dist/
+.next/
+.nuxt/
+
+# ── Docker ──
+docker-compose.override.yml
+
+# ── Misc ──
+.fake
+*.bak
+*.tmp

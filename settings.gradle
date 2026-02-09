@@ -1,0 +1,36 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'job-monitoring-platform'
+
+// ═══════════════ Platform Libraries ═══════════════
+include ':platform:common'
+include ':platform:schema'
+
+// ═══════════════ Core Services ═══════════════
+include ':services:config-server'
+include ':services:auth-service'
+include ':services:ingestion-gateway'
+include ':services:alerting-service'
+include ':services:notification-service'
+include ':services:job-monitoring-service'
+include ':services:job-queue-service'
+
+// ═══════════════ Future Services (Stage 2/3) ═══════════════
+// include ':services:log-ingestion-service'
+// include ':services:db-performance-service'
+
+// ═══════════════ Workers ═══════════════
+include ':workers:job-worker'
+include ':workers:notification-worker'
