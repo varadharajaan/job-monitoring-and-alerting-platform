@@ -1,0 +1,99 @@
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Shared Logback Configuration — Platform Common
+     Include this in every service's logback-spring.xml:
+       <include resource="logback-platform.xml"/>
+     Features:
+       • JSON structured logging (logstash-logback-encoder)
+       • Rolling file appender (JSONL format for Athena)
+       • MDC enrichment (traceId, tenantId, service)
+       • Profile-aware: colored console for local, pure JSON for prod
+     ═══════════════════════════════════════════════════════════════════════ -->
+<included>
+
+    <!-- ── Properties from Spring Environment ── -->
+    <springProperty scope="context" name="APP_NAME"    source="spring.application.name" defaultValue="platform"/>
+    <springProperty scope="context" name="LOG_DIR"     source="platform.logging.dir"    defaultValue="logs"/>
+    <springProperty scope="context" name="LOG_MAX_SIZE" source="platform.logging.max-file-size" defaultValue="50MB"/>
+    <springProperty scope="context" name="LOG_MAX_HISTORY" source="platform.logging.max-history" defaultValue="30"/>
+    <springProperty scope="context" name="LOG_TOTAL_CAP" source="platform.logging.total-size-cap" defaultValue="1GB"/>
+
+    <!-- ── Console: human-readable for local/dev ── -->
+    <springProfile name="local | dev">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%blue(%thread)] %cyan(%logger{36}) — %msg%n%throwable</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- ── Console: JSON for staging/prod (structured for log aggregators) ── -->
+    <springProfile name="staging | prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeMdcKeyName>traceId</includeMdcKeyName>
+                <includeMdcKeyName>spanId</includeMdcKeyName>
+                <includeMdcKeyName>tenantId</includeMdcKeyName>
+                <customFields>{"service":"${APP_NAME}"}</customFields>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- ── Rolling JSON File: JSONL format for S3 upload → Athena queries ── -->
+    <appender name="FILE_JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${APP_NAME}.jsonl</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/archive/${APP_NAME}.%d{yyyy-MM-dd}.%i.jsonl.gz</fileNamePattern>
+            <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${LOG_TOTAL_CAP}</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>tenantId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <customFields>{"service":"${APP_NAME}"}</customFields>
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</timestampPattern>
+        </encoder>
+    </appender>
+
+    <!-- ── Rolling text file for quick local debugging ── -->
+    <springProfile name="local">
+        <appender name="FILE_TEXT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_DIR}/${APP_NAME}.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_DIR}/archive/${APP_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>500MB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{ISO8601} %-5level [%thread] %logger{36} [%X{traceId:-}] — %msg%n%throwable</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- ── Async wrapper for FILE_JSON (non-blocking I/O) ── -->
+    <appender name="ASYNC_FILE_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <appender-ref ref="FILE_JSON"/>
+    </appender>
+
+    <!-- ── Suppress noisy frameworks ── -->
+    <logger name="org.apache.kafka"   level="WARN"/>
+    <logger name="org.hibernate"      level="WARN"/>
+    <logger name="org.springframework.security" level="WARN"/>
+    <logger name="io.lettuce.core"    level="WARN"/>
+    <logger name="org.flywaydb"       level="INFO"/>
+
+    <!-- ── Platform packages at DEBUG in local ── -->
+    <springProfile name="local">
+        <logger name="com.jobmonitor" level="DEBUG"/>
+    </springProfile>
+    <springProfile name="!local">
+        <logger name="com.jobmonitor" level="INFO"/>
+    </springProfile>
+
+</included>
