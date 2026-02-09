@@ -1,0 +1,6 @@
+apply from: "$rootDir/buildSrc/spring-boot-service.gradle"
+
+dependencies {
+    implementation project(':platform:common')
+    implementation project(':platform:schema')
+}

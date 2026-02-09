@@ -1,0 +1,14 @@
+apply from: "$rootDir/buildSrc/spring-boot-service.gradle"
+
+dependencies {
+    implementation project(':platform:common')
+    implementation project(':platform:schema')
+    
+    // Email
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    
+    // AWS SES + SNS for prod
+    implementation 'software.amazon.awssdk:ses'
+    implementation 'software.amazon.awssdk:sns'
+}
