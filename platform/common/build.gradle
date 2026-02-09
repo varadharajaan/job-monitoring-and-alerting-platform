@@ -1,0 +1,55 @@
+// ═══════════════════════════════════════════════════════════════════
+//  platform:common — Shared library (auth, events, errors, logging)
+//  This is a plain JAR (not bootable), consumed by all services.
+// ═══════════════════════════════════════════════════════════════════
+
+plugins {
+    id 'java-library'
+    id 'io.spring.dependency-management'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.5"
+        mavenBom "software.amazon.awssdk:bom:${awsSdkVersion}"
+    }
+}
+
+dependencies {
+    // ── Spring (compile-only — services bring their own starters) ──
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+    api 'org.springframework.kafka:spring-kafka'
+    api 'org.springframework.boot:spring-boot-starter-security'
+
+    // ── AWS S3 ──
+    api 'software.amazon.awssdk:s3'
+
+    // ── Jackson ──
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // ── MapStruct ──
+    api "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+    // ── Config Processor ──
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // ── Testing ──
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+// This is a library JAR, not a Spring Boot application
+jar {
+    enabled = true
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+        '-Amapstruct.defaultComponentModel=spring',
+        '-Amapstruct.unmappedTargetPolicy=IGNORE'
+    ]
+}

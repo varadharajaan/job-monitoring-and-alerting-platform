@@ -1,0 +1,107 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Platform Default Configuration
+#  All values are defaults — override per environment via profiles
+#  or environment variables (PLATFORM_ASYNC_TASK_POOL_CORE_SIZE etc.)
+#
+#  ZERO hardcoded magic numbers — every tunable lives here.
+# ═══════════════════════════════════════════════════════════════════
+
+platform:
+  # ── Async Thread Pools ──
+  async:
+    task-pool:
+      core-size: ${PLATFORM_ASYNC_TASK_CORE:4}
+      max-size: ${PLATFORM_ASYNC_TASK_MAX:16}
+      queue-capacity: ${PLATFORM_ASYNC_TASK_QUEUE:100}
+      thread-prefix: async-
+      await-termination-seconds: 30
+    notification-pool:
+      core-size: ${PLATFORM_ASYNC_NOTIF_CORE:2}
+      max-size: ${PLATFORM_ASYNC_NOTIF_MAX:8}
+      queue-capacity: ${PLATFORM_ASYNC_NOTIF_QUEUE:200}
+      thread-prefix: notif-
+      await-termination-seconds: 60
+    job-queue-pool:
+      core-size: ${PLATFORM_ASYNC_JOBQ_CORE:4}
+      max-size: ${PLATFORM_ASYNC_JOBQ_MAX:12}
+      queue-capacity: ${PLATFORM_ASYNC_JOBQ_QUEUE:50}
+      thread-prefix: job-queue-
+      await-termination-seconds: 120
+
+  # ── Kafka Topics & Listener Config ──
+  kafka:
+    topics:
+      job-events: ${KAFKA_TOPIC_JOB_EVENTS:job-monitor.job-events}
+      notification-events: ${KAFKA_TOPIC_NOTIF_EVENTS:job-monitor.notification-events}
+      query-events: ${KAFKA_TOPIC_QUERY_EVENTS:job-monitor.query-events}
+      queue-events: ${KAFKA_TOPIC_QUEUE_EVENTS:job-monitor.queue-events}
+      alert-events: ${KAFKA_TOPIC_ALERT_EVENTS:job-monitor.alert-events}
+      dead-letter: ${KAFKA_TOPIC_DLT:job-monitor.dead-letter}
+      default-partitions: ${KAFKA_DEFAULT_PARTITIONS:6}
+      default-replicas: ${KAFKA_DEFAULT_REPLICAS:1}
+    listener:
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+    error-handling:
+      backoff-interval-ms: ${KAFKA_ERROR_BACKOFF:1000}
+      max-retries: ${KAFKA_ERROR_MAX_RETRIES:3}
+
+  # ── Cache (Redis) ──
+  cache:
+    default-ttl: ${CACHE_DEFAULT_TTL:15m}
+    ttls:
+      jobs: ${CACHE_TTL_JOBS:5m}
+      notifications: ${CACHE_TTL_NOTIFICATIONS:10m}
+      templates: ${CACHE_TTL_TEMPLATES:1h}
+      rate-limits: ${CACHE_TTL_RATE_LIMITS:1m}
+      api-keys: ${CACHE_TTL_API_KEYS:30m}
+
+  # ── S3 (Log Upload for Athena) ──
+  s3:
+    enabled: ${S3_ENABLED:false}
+    bucket: ${S3_BUCKET:job-monitor-logs}
+    region: ${S3_REGION:us-east-1}
+    endpoint: ${S3_ENDPOINT:}
+    log-upload-cron: ${S3_LOG_UPLOAD_CRON:0 0 * * * *}
+    path-prefix: ${S3_PATH_PREFIX:logs}
+
+  # ── Notification Rate Limits (per minute) ──
+  notification:
+    rate-limit:
+      email: ${NOTIF_RATE_EMAIL:100}
+      sms: ${NOTIF_RATE_SMS:50}
+      slack: ${NOTIF_RATE_SLACK:200}
+      push: ${NOTIF_RATE_PUSH:300}
+
+  # ── Job Monitor ──
+  job-monitor:
+    health-check-interval-ms: ${JOB_HEALTH_CHECK_INTERVAL:60000}
+    sla-evaluation-cron: ${JOB_SLA_CRON:0 */5 * * * *}
+    max-retry-attempts: ${JOB_MAX_RETRIES:3}
+    retry-backoff-multiplier: ${JOB_RETRY_BACKOFF:2.0}
+    execution-retention-period: ${JOB_RETENTION:90d}
+
+  # ── Job Queue ──
+  job-queue:
+    worker-count: ${QUEUE_WORKER_COUNT:4}
+    poll-interval-ms: ${QUEUE_POLL_INTERVAL:5000}
+    max-execution-time: ${QUEUE_MAX_EXEC_TIME:1h}
+    max-retries: ${QUEUE_MAX_RETRIES:3}
+    lock-timeout: ${QUEUE_LOCK_TIMEOUT:5m}
+
+  # ── Security Paths ──
+  security:
+    public-paths:
+      - /api-docs/**
+      - /swagger-ui/**
+      - /swagger-ui.html
+      - /actuator/health/**
+      - /actuator/info
+    admin-paths:
+      - /actuator/**
+
+  # ── Logging (used by logback-platform.xml) ──
+  logging:
+    dir: ${LOG_DIR:logs}
+    max-file-size: ${LOG_MAX_FILE_SIZE:50MB}
+    max-history: ${LOG_MAX_HISTORY:30}
+    total-size-cap: ${LOG_TOTAL_SIZE_CAP:1GB}
