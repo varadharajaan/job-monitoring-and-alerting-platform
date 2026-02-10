@@ -1,0 +1,130 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Service Health Overview",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "count(up == 1)", "legendFormat": "Services Up", "refId": "A" },
+        { "expr": "count(up == 0)", "legendFormat": "Services Down", "refId": "B" }
+      ],
+      "fieldConfig": {
+        "defaults": { "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0 }] } }
+      }
+    },
+    {
+      "title": "Request Rate (per service)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count[5m])) by (job)", "legendFormat": "{{job}}", "refId": "A" }
+      ]
+    },
+    {
+      "title": "Error Rate (5xx)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) by (job)", "legendFormat": "{{job}}", "refId": "A" }
+      ]
+    },
+    {
+      "title": "P95 Response Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))", "legendFormat": "{{job}}", "refId": "A" }
+      ]
+    },
+    {
+      "title": "JVM Heap Memory Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        { "expr": "jvm_memory_used_bytes{area=\"heap\"} / 1024 / 1024", "legendFormat": "{{job}} - {{id}}", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } }
+    },
+    {
+      "title": "Ingestion Rate",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 20 },
+      "targets": [
+        { "expr": "sum(rate(gateway_ingest_seconds_count[5m]))", "legendFormat": "Events/sec", "refId": "A" }
+      ]
+    },
+    {
+      "title": "Alert Evaluation Rate",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 20 },
+      "targets": [
+        { "expr": "sum(rate(alert_evaluate_seconds_count[5m]))", "legendFormat": "Evaluations/sec", "refId": "A" }
+      ]
+    },
+    {
+      "title": "Notification Send Rate",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 20 },
+      "targets": [
+        { "expr": "sum(rate(notification_send_seconds_count[5m]))", "legendFormat": "Notifications/sec", "refId": "A" }
+      ]
+    },
+    {
+      "title": "Queue Enqueue Rate",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 20 },
+      "targets": [
+        { "expr": "sum(rate(queue_enqueue_seconds_count[5m]))", "legendFormat": "Jobs/sec", "refId": "A" }
+      ]
+    },
+    {
+      "title": "Kafka Consumer Lag",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        { "expr": "sum(kafka_consumer_fetch_manager_records_lag) by (client_id)", "legendFormat": "{{client_id}}", "refId": "A" }
+      ]
+    },
+    {
+      "title": "GC Pause Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        { "expr": "rate(jvm_gc_pause_seconds_sum[5m])", "legendFormat": "{{job}} - {{action}}", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "title": "Active Threads",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "targets": [
+        { "expr": "jvm_threads_live_threads", "legendFormat": "{{job}}", "refId": "A" }
+      ]
+    },
+    {
+      "title": "DB Connection Pool Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "targets": [
+        { "expr": "hikaricp_connections_active", "legendFormat": "{{job}} active", "refId": "A" },
+        { "expr": "hikaricp_connections_idle", "legendFormat": "{{job}} idle", "refId": "B" }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["job-monitor", "spring-boot", "microservices"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Job Monitoring Platform - Overview",
+  "uid": "jobmonitor-overview",
+  "version": 1
+}

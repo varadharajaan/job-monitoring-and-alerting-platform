@@ -15,6 +15,7 @@ import com.jobmonitor.platform.common.exception.ResourceNotFoundException;
 import com.jobmonitor.platform.common.functional.AlertConditionEvaluator;
 import com.jobmonitor.platform.common.functional.EntityValidator;
 import com.jobmonitor.platform.common.functional.EventPublisher;
+import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -126,6 +127,7 @@ public class AlertService {
     // ──────────── Rule CRUD ────────────
 
     @Transactional
+    @Timed(value = "alert.rule.create", description = "Time to create an alert rule")
     public AlertRuleResponse createRule(String tenantId, AlertRuleRequest request) {
         log.info("Creating alert rule '{}' for tenant={}", request.getName(), tenantId);
 
@@ -190,6 +192,7 @@ public class AlertService {
      * @return list of triggered alert history entries
      */
     @Transactional
+    @Timed(value = "alert.evaluate", description = "Time to evaluate alert rules")
     public List<AlertHistoryResponse> evaluateRules(String tenantId, UUID jobId,
                                                      Map<String, Object> context) {
         var activeRules = ruleRepository.findActiveRulesForJob(tenantId, jobId);

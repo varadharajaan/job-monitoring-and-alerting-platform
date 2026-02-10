@@ -99,8 +99,30 @@ services:
     container_name: jobmonitor-prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alertmanager-rules.yml:/etc/prometheus/alertmanager-rules.yml
     ports:
       - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle'
+
+  # ═══════════════ Alertmanager ═══════════════
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: jobmonitor-alertmanager
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    ports:
+      - "9093:9093"
+
+  # ═══════════════ Zipkin (Distributed Tracing) ═══════════════
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: jobmonitor-zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      STORAGE_TYPE: mem
 
   # ═══════════════ Grafana ═══════════════
   grafana:
@@ -114,6 +136,8 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
 
 volumes:
   postgres_data:

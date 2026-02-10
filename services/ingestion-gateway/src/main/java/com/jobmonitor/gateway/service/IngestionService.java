@@ -5,6 +5,7 @@ import com.jobmonitor.gateway.dto.IngestionResponse;
 import com.jobmonitor.platform.common.config.PlatformProperties;
 import com.jobmonitor.platform.common.event.JobEvent;
 import com.jobmonitor.platform.common.functional.EventPublisher;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class IngestionService {
                     .executionStartTime(Instant.now())
                     .build();
 
+    @Timed(value = "gateway.ingest", description = "Time to ingest and publish a job event")
     public IngestionResponse ingest(String tenantId, IngestionRequest request) {
         var context = new IngestionContext(tenantId, request);
         JobEvent event = toJobEvent.apply(context);

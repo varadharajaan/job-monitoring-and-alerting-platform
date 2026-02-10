@@ -1,0 +1,69 @@
+groups:
+  - name: service_health
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is down"
+          description: "{{ $labels.instance }} of {{ $labels.job }} has been down for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) / rate(http_server_requests_seconds_count[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "{{ $labels.job }} has >5% error rate for 2 minutes."
+
+  - name: jvm_alerts
+    rules:
+      - alert: HighMemoryUsage
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High heap memory on {{ $labels.job }}"
+          description: "JVM heap usage is above 85% on {{ $labels.instance }}."
+
+      - alert: HighGCPause
+        expr: rate(jvm_gc_pause_seconds_sum[5m]) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High GC pause on {{ $labels.job }}"
+          description: "GC pause time is above 500ms/s on {{ $labels.instance }}."
+
+  - name: business_metrics
+    rules:
+      - alert: QueueBacklog
+        expr: queue_enqueue_seconds_count - queue_complete_seconds_count > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Job queue backlog growing"
+          description: "Pending queue items exceed 100 for 5 minutes."
+
+      - alert: SlowIngestion
+        expr: gateway_ingest_seconds{quantile="0.95"} > 2
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow ingestion gateway"
+          description: "P95 ingestion latency exceeds 2s for 3 minutes."
+
+      - alert: HighAlertRate
+        expr: rate(alert_evaluate_seconds_count[5m]) > 10
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "High alert evaluation rate"
+          description: "Alert evaluations exceeding 10/s for 5 minutes."

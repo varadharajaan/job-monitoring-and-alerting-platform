@@ -890,8 +890,8 @@ Every response follows ApiError JSON:
 |  │  ChannelDispatcherConfig — 5 real channels:                 │  |
 |  │    ─ EMAIL:   JavaMailSender (SMTP / AWS SES)               │  |
 |  │    ─ SLACK:   RestTemplate → webhook URL (JSON payload)     │  |
-|  │    ─ SMS:     Placeholder for Twilio / AWS SNS              │  |
-|  │    ─ PUSH:    Placeholder for FCM / Azure Notification Hubs │  |
+|  │    ─ SMS:     AWS SNS SDK (SnsClient + PublishRequest)      │  |
+|  │    ─ PUSH:    FCM HTTP Legacy API (RestTemplate + auth)     │  |
 |  │    ─ WEBHOOK: RestTemplate → recipient URL (generic HTTP)   │  |
 |  │                                                             │  |
 |  │  Injected as Map<String, NotificationDispatcher> bean       │  |

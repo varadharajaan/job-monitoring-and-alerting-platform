@@ -14,6 +14,7 @@ import com.jobmonitor.platform.common.exception.ResourceNotFoundException;
 import com.jobmonitor.platform.common.functional.EntityValidator;
 import com.jobmonitor.platform.common.functional.EventPublisher;
 import com.jobmonitor.platform.common.event.PlatformEvent;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -79,6 +80,7 @@ public class JobService {
     // ──────────── Job CRUD ────────────
 
     @Transactional
+    @Timed(value = "job.create", description = "Time to create a monitored job")
     public JobResponse createJob(String tenantId, JobRequest request) {
         log.info("Creating job '{}' for tenant={}", request.getName(), tenantId);
 

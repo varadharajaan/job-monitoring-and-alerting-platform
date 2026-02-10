@@ -31,6 +31,10 @@ dependencies {
     // ── Azure Blob Storage ──
     api 'com.azure:azure-storage-blob:12.25.4'
 
+    // ── Micrometer (Metrics annotations) ──
+    api 'io.micrometer:micrometer-core'
+    api 'org.springframework.boot:spring-boot-starter-aop'
+
     // ── JWT (JJWT) ──
     api 'io.jsonwebtoken:jjwt-api:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'

@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: job-queue-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://config:config@localhost:8888}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   datasource:
@@ -44,7 +46,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:when_authorized}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING:1.0}
+    propagation:
+      type: b3
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
 
 springdoc:
   api-docs:

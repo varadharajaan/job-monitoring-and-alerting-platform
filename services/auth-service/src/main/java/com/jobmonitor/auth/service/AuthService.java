@@ -11,6 +11,7 @@ import com.jobmonitor.platform.common.exception.ErrorCode;
 import com.jobmonitor.platform.common.exception.ResourceNotFoundException;
 import com.jobmonitor.platform.common.functional.EntityValidator;
 import com.jobmonitor.platform.common.security.JwtTokenProvider;
+import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -86,6 +87,7 @@ public class AuthService {
     }
 
     @Transactional
+    @Timed(value = "auth.login", description = "Time to authenticate a user")
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByUsernameAndEnabledTrue(request.getUsername())
                 .filter(u -> passwordEncoder.matches(request.getPassword(), u.getPasswordHash()))

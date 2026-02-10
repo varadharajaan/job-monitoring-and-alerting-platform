@@ -8,6 +8,7 @@ import com.jobmonitor.platform.common.config.PlatformProperties;
 import com.jobmonitor.platform.common.event.QueueEvent;
 import com.jobmonitor.platform.common.exception.ResourceNotFoundException;
 import com.jobmonitor.platform.common.functional.EventPublisher;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -62,6 +63,7 @@ public class JobQueueService {
                     .build();
 
     @Transactional
+    @Timed(value = "queue.enqueue", description = "Time to enqueue a job")
     public QueueItemResponse enqueue(String tenantId, EnqueueRequest request) {
         var item = new JobQueueItem();
         item.setTenantId(tenantId);

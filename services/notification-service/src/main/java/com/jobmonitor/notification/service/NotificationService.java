@@ -15,6 +15,7 @@ import com.jobmonitor.platform.common.exception.DuplicateResourceException;
 import com.jobmonitor.platform.common.exception.ResourceNotFoundException;
 import com.jobmonitor.platform.common.functional.EventPublisher;
 import com.jobmonitor.platform.common.functional.NotificationDispatcher;
+import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -145,6 +146,7 @@ public class NotificationService {
     // ──────────── Send Notification ────────────
 
     @Transactional
+    @Timed(value = "notification.send", description = "Time to send a notification")
     public NotificationResponse sendNotification(String tenantId, SendNotificationRequest request) {
         log.info("Sending {} notification to {} for tenant={}",
                 request.getChannel(), request.getRecipient(), tenantId);

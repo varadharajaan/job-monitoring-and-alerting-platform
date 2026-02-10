@@ -1,6 +1,8 @@
 spring:
   application:
     name: notification-worker
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://config:config@localhost:8888}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   main:
@@ -67,3 +69,11 @@ management:
   endpoint:
     health:
       show-details: always
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING:1.0}
+    propagation:
+      type: b3
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
