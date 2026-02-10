@@ -18,6 +18,9 @@ rootProject.name = 'job-monitoring-platform'
 include ':platform:common'
 include ':platform:schema'
 
+// ═══════════════ Infrastructure Services ═══════════════
+include ':services:eureka-server'
+
 // ═══════════════ Core Services ═══════════════
 include ':services:config-server'
 include ':services:auth-service'

@@ -30,6 +30,9 @@ dependencies {
     // ── Cache ──
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    // ── Service Discovery ──
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
     // ── Resilience ──
     implementation "io.github.resilience4j:resilience4j-spring-boot3:${resilience4jVersion}"
 

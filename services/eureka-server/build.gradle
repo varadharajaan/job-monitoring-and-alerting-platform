@@ -1,0 +1,28 @@
+// ═══════════════════════════════════════════════════════════════════
+//  services:eureka-server — Spring Cloud Netflix Eureka Server
+//  Service discovery for distributed microservice registration
+// ═══════════════════════════════════════════════════════════════════
+
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // ── Logging ──
+    implementation "net.logstash.logback:logstash-logback-encoder:${logstashEncoderVersion}"
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
