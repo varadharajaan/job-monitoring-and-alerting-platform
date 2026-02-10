@@ -1,95 +1,201 @@
 # Job Monitoring & Alerting Platform
 
-A unified, production-grade platform for **scheduled job monitoring**, **multi-channel notifications**, **database query performance analysis**, and **multi-tenant background job queuing** — built with Spring Boot 3.x, Kafka, TimescaleDB, and Redis.
+[![Java 17](https://img.shields.io/badge/Java-17-blue)](https://openjdk.org/projects/jdk/17/)
+[![Spring Boot 3.2.5](https://img.shields.io/badge/Spring_Boot-3.2.5-green)](https://spring.io/projects/spring-boot)
+[![Gradle 8.7](https://img.shields.io/badge/Gradle-8.7-02303A)](https://gradle.org/)
+
+A unified, production-grade enterprise platform for **scheduled job monitoring**, **intelligent alerting**, **multi-channel notifications**, and **multi-tenant background job queuing** — built as a Gradle multi-module monorepo with Spring Boot 3.2.5, Kafka 3.7, TimescaleDB, and Redis.
 
 ---
 
-## Architecture Overview
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    API Gateway / REST Controllers                │
-├──────────┬──────────┬─────────────┬─────────────────────────────┤
-│  Job     │ Notif-   │ Query       │ Background                  │
-│  Monitor │ ication  │ Analyzer    │ Job Queue                   │
-├──────────┴──────────┴─────────────┴─────────────────────────────┤
-│               Kafka Event Bus (Async Communication)             │
-├─────────────────────────────────────────────────────────────────┤
-│    Redis (Caching, Rate Limiting)  │  TimescaleDB (Persistence) │
-├─────────────────────────────────────────────────────────────────┤
-│         S3 (Log Archive)  │  Elasticsearch (Future: Logs)       │
-└─────────────────────────────────────────────────────────────────┘
++-----------+     +-----------+     +-----------+
+| Dashboard |     | CLI / SDK |     | External  |
+|   (SPA)   |     |  Clients  |     | Webhooks  |
++-----+-----+     +-----+-----+     +-----+-----+
+      |                 |                 |
+      +--------+--------+---------+-------+
+               |    HTTPS / JWT   |
+      +--------v------------------v--------+
+      |      Ingestion Gateway (:8080)     |
+      |   Rate Limiting  |  JWT Validation |
+      +----+----+----+----+----+----+------+
+           |    |    |    |    |    |
+     +-----+ +--+ +--+ +--+ +--+ +--+
+     |       |    |    |    |    |
+     v       v    v    v    v    v
+  +------+ +----+ +--+ +--+ +--+ +--------+
+  | Auth | | Job| |Al-| |No-| |Qu-| |Config |
+  | Svc  | | Mon| |ert| |tif| |eue| |Server |
+  | 8081 | | 8082| |8083| |8084| |8085| | 8888  |
+  +------+ +--+-+ +-+--+ +-+--+ +-+--+ +--------+
+               |    |      |      |
+               v    v      v      v
+      +--------+----+------+------+--------+
+      |          Kafka Event Bus           |
+      |     (KRaft mode, 6 topics)         |
+      +----+-------------------+-----------+
+           |                   |
+     +-----v-----+      +-----v------+
+     | Job Worker |      | Notif      |
+     | (headless) |      | Worker     |
+     +-----+------+      +-----+------+
+           |                    |
++----------+--------------------+-----------+
+|                                           |
+|  +------------+ +-------+ +------------+  |
+|  | TimescaleDB| | Redis | | LocalStack |  |
+|  | (pg16)     | | 7     | | (S3)       |  |
+|  +------------+ +-------+ +------------+  |
+|                                           |
++-------------------------------------------+
 ```
 
 ## Modules
 
-| Module | Description | Status |
-|--------|-------------|--------|
-| **Job Monitor** | Cron monitoring, execution history, SLA alerts, retry | ✅ Active |
-| **Notification** | Email, SMS, Slack, Push — template-driven, rate-limited | ✅ Active |
-| **Query Analyzer** | Slow query detection, index suggestions, explain plans | ✅ Active |
-| **Job Queue** | Multi-tenant background job processing with priorities | ✅ Active |
-| **Log Aggregation** | Real-time log collection & search | 🔮 Future |
+This is a Gradle multi-module monorepo with 11 modules:
+
+```
+job-monitoring-and-alerting-platform/
++-- buildSrc/                         Shared Gradle conventions
++-- platform/
+|   +-- common/                       Shared library (config, exceptions, events, DTOs)
+|   +-- schema/                       Flyway SQL migrations (V001-V006)
++-- services/
+|   +-- config-server/                Spring Cloud Config (:8888)
+|   +-- auth-service/                 JWT authentication (:8081)
+|   +-- ingestion-gateway/            API gateway + rate limiting (:8080)
+|   +-- job-monitoring-service/       Job registration + execution tracking (:8082)
+|   +-- alerting-service/             Alert rules + evaluation (:8083)
+|   +-- notification-service/         Template-driven notifications (:8084)
+|   +-- job-queue-service/            Background job queue (:8085)
++-- workers/
+|   +-- job-worker/                   Queue consumer (headless)
+|   +-- notification-worker/          Notification delivery (headless)
++-- deploy/docker/                    Docker Compose + Prometheus
++-- docs/                             Architecture, data model, API, deployment
+```
 
 ## Tech Stack
 
-- **Runtime**: Java 17, Spring Boot 3.2.x
-- **Messaging**: Apache Kafka
-- **Database**: PostgreSQL + TimescaleDB extension
-- **Cache**: Redis
-- **Logging**: Logback → JSON (JSONL) → S3 → Athena
-- **Build**: Maven
-- **Container**: Docker + Docker Compose
-- **CI/CD**: GitHub Actions
+| Category       | Technology                                         |
+|---------------|---------------------------------------------------|
+| **Runtime**   | Java 17 (language features restricted to Java 11)  |
+| **Framework** | Spring Boot 3.2.5, Spring Cloud 2023.0.1           |
+| **Build**     | Gradle 8.7, multi-module with shared conventions   |
+| **Messaging** | Apache Kafka 3.7.0 (KRaft mode, no ZooKeeper)     |
+| **Database**  | PostgreSQL 16 + TimescaleDB (hypertables, aggregates) |
+| **Cache**     | Redis 7 (5 named caches, rate limiting)            |
+| **Cloud**     | AWS SDK 2.25.16, LocalStack (S3 log archive)       |
+| **Security**  | jjwt 0.12.5, Bucket4j rate limiting               |
+| **Resilience**| Resilience4j 2.2.0                                 |
+| **Mapping**   | MapStruct 1.5.5                                    |
+| **Docs**      | SpringDoc OpenAPI 2.5.0                            |
+| **Testing**   | Testcontainers 1.19.7, WireMock                   |
+| **Logging**   | Logstash JSON Encoder 7.4, S3 JSONL archive       |
+| **Monitoring**| Prometheus + Grafana                               |
 
 ## Quick Start
 
 ### Prerequisites
-- Java 17+
-- Docker & Docker Compose
-- Maven 3.9+
 
-### Run Locally
+- Java 17+
+- Docker & Docker Compose 2.20+
+- Git
+
+### 1. Clone & Build
 
 ```bash
-# Start infrastructure
-docker compose -f docker/docker-compose.yml up -d
-
-# Build & run
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+git clone https://github.com/varadharajaan/job-monitoring-and-alerting-platform.git
+cd job-monitoring-and-alerting-platform
+./gradlew build -x test
 ```
+
+### 2. Start Infrastructure
+
+```bash
+docker compose -f deploy/docker/docker-compose.yml up -d
+```
+
+This starts TimescaleDB (:5432), Kafka (:9092), Redis (:6379), LocalStack (:4566), Prometheus (:9090), and Grafana (:3000).
+
+### 3. Start Services
+
+```bash
+# Config server must start first
+./gradlew :services:config-server:bootRun
+
+# Then start remaining services (in separate terminals)
+./gradlew :services:auth-service:bootRun
+./gradlew :services:ingestion-gateway:bootRun
+./gradlew :services:job-monitoring-service:bootRun
+./gradlew :services:alerting-service:bootRun
+./gradlew :services:notification-service:bootRun
+./gradlew :services:job-queue-service:bootRun
+./gradlew :workers:job-worker:bootRun
+./gradlew :workers:notification-worker:bootRun
+```
+
+### 4. Verify
+
+```bash
+curl http://localhost:8080/actuator/health | jq .
+```
+
+### 5. Explore APIs
+
+Open Swagger UI for any service:
+- Job Monitoring: http://localhost:8082/swagger-ui.html
+- Alerting: http://localhost:8083/swagger-ui.html
+- Notifications: http://localhost:8084/swagger-ui.html
+- Job Queue: http://localhost:8085/swagger-ui.html
 
 ### Run Tests
 
 ```bash
-./mvnw test
+./gradlew test
 ```
 
-## API Endpoints
+## Key Features
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/v1/jobs` | Register a monitored job |
-| `GET` | `/api/v1/jobs` | List all monitored jobs |
-| `POST` | `/api/v1/jobs/{id}/executions` | Record job execution |
-| `POST` | `/api/v1/jobs/{id}/retry` | Retry a failed job |
-| `POST` | `/api/v1/notifications/send` | Send a notification |
-| `GET` | `/api/v1/notifications/templates` | List notification templates |
-| `POST` | `/api/v1/queries/analyze` | Analyze a SQL query |
-| `GET` | `/api/v1/queries/slow` | List slow queries |
-| `POST` | `/api/v1/queue/jobs` | Submit a background job |
-| `GET` | `/api/v1/queue/jobs` | List queued jobs |
+| Feature                    | Description                                                   |
+|---------------------------|---------------------------------------------------------------|
+| **Job Monitoring**        | Cron tracking, SLA enforcement, execution history, retry      |
+| **Intelligent Alerting**  | Rule engine with failure threshold, SLA violation, heartbeat  |
+| **Multi-Channel Notify**  | Email, SMS, Slack, Push — with templates and rate limiting    |
+| **Background Job Queue**  | Priority queue, locking, retry, dead-letter handling          |
+| **Multi-Tenancy**         | Tenant isolation via partition key, JWT claim propagation     |
+| **Time-Series Analytics** | TimescaleDB hypertables, continuous aggregates, 90d retention |
+| **Centralized Config**    | Spring Cloud Config Server with profile-based overrides       |
+| **Observability**         | Structured JSON logging, Prometheus metrics, Grafana          |
+| **API Gateway**           | Rate limiting (60 RPM), JWT validation, request routing       |
+| **S3 Log Archive**        | JSONL logs uploaded to S3 (LocalStack), Athena-queryable      |
 
-## Configuration
+## Documentation
 
-All secrets and configuration are centralized via Spring profiles and environment variables. See `application.yml` for defaults.
+| Document                              | Description                                    |
+|--------------------------------------|------------------------------------------------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, ASCII diagrams |
+| [docs/DATA-MODEL.md](docs/DATA-MODEL.md)     | Database schema, ER diagram, indexes     |
+| [docs/API-REFERENCE.md](docs/API-REFERENCE.md) | REST endpoints, error codes, auth      |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)     | Docker setup, env vars, profiles         |
+| [PROGRESS.md](PROGRESS.md)                   | Sprint progress and issue tracking       |
 
-| Property | Description | Default |
-|----------|-------------|---------|
-| `platform.kafka.bootstrap-servers` | Kafka brokers | `localhost:9092` |
-| `platform.redis.host` | Redis host | `localhost` |
-| `platform.s3.bucket` | S3 bucket for log archiving | `job-monitor-logs` |
-| `platform.notification.rate-limit` | Max notifications/min/channel | `100` |
+## Error Handling
+
+All errors return a consistent `ApiError` response with a centralized `ErrorCode` enum (22 codes). See [docs/API-REFERENCE.md](docs/API-REFERENCE.md#12-error-codes-reference) for the full error code reference.
+
+## Project Status
+
+This project consolidates 5 SaaS product ideas into a single enterprise platform:
+
+1. **Job Monitor SaaS** — Cron monitoring, SLA enforcement, execution tracking
+2. **Notification Hub** — Multi-channel template-driven notifications
+3. **Query Performance Analyzer** — Slow query detection and optimization (future)
+4. **Background Job Queue** — Priority-based distributed task processing
+5. **Log Aggregation** — Centralized log collection and search (future)
 
 ## License
 
