@@ -1,0 +1,24 @@
+# Azure profile for config-server
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${AZURE_CONFIG_GIT_URI}
+          default-label: ${CONFIG_GIT_BRANCH:main}
+          clone-on-start: true
+  security:
+    user:
+      name: ${CONFIG_SERVER_USER}
+      password: ${CONFIG_SERVER_PASSWORD}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: WARN
+    com.jobmonitor: INFO

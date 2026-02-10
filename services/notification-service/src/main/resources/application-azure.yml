@@ -1,0 +1,61 @@
+# Azure profile for notification-service
+spring:
+  datasource:
+    url: ${AZURE_DB_URL}
+    username: ${AZURE_DB_USERNAME}
+    password: ${AZURE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:15}
+      minimum-idle: ${DB_POOL_MIN_IDLE:3}
+  kafka:
+    bootstrap-servers: ${AZURE_EVENTHUBS_BOOTSTRAP}
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="$$ConnectionString"
+        password="${AZURE_EVENTHUBS_CONNECTION_STRING}";
+  data:
+    redis:
+      host: ${AZURE_REDIS_HOST}
+      port: ${AZURE_REDIS_PORT:6380}
+      password: ${AZURE_REDIS_PASSWORD}
+      ssl:
+        enabled: true
+
+platform:
+  notification:
+    rate-limit:
+      email: 50
+      sms: 25
+      slack: 100
+  security:
+    public-paths:
+      - /actuator/health/**
+      - /actuator/info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.jobmonitor: INFO
+
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}

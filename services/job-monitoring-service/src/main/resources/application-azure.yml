@@ -1,0 +1,114 @@
+# ═══════════════════════════════════════════════════════════════
+# Azure profile — Azure managed services (Event Hubs, Flexible Server, Cache for Redis)
+# Activated via: SPRING_PROFILES_ACTIVE=azure
+# Use for: Azure test/staging env ($200/month budget) or Azure prod
+# ═══════════════════════════════════════════════════════════════
+
+spring:
+  datasource:
+    url: ${AZURE_DB_URL}
+    username: ${AZURE_DB_USERNAME}
+    password: ${AZURE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        default_schema: public
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  kafka:
+    bootstrap-servers: ${AZURE_EVENTHUBS_BOOTSTRAP}
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="$$ConnectionString"
+        password="${AZURE_EVENTHUBS_CONNECTION_STRING}";
+    producer:
+      acks: all
+      retries: 3
+      batch-size: 16384
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+  data:
+    redis:
+      host: ${AZURE_REDIS_HOST}
+      port: ${AZURE_REDIS_PORT:6380}
+      password: ${AZURE_REDIS_PASSWORD}
+      ssl:
+        enabled: true
+      timeout: 5000ms
+  flyway:
+    enabled: true
+  cloud:
+    azure:
+      active-directory:
+        enabled: ${AZURE_AD_ENABLED:false}
+
+platform:
+  kafka:
+    topics:
+      default-replicas: ${KAFKA_DEFAULT_REPLICAS:1}
+    listener:
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+  s3:
+    enabled: false
+  azure:
+    blob-storage:
+      enabled: ${AZURE_BLOB_ENABLED:true}
+      connection-string: ${AZURE_STORAGE_CONNECTION_STRING}
+      container-name: ${AZURE_LOG_CONTAINER:jobmonitor-logs}
+  security:
+    public-paths:
+      - /actuator/health/**
+      - /actuator/info
+  logging:
+    dir: /var/log/jobmonitor
+    max-file-size: 50MB
+    max-history: 7
+    total-size-cap: 2GB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.jobmonitor: INFO
+
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${EUREKA_URL}
+    registry-fetch-interval-seconds: 15
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}
+    lease-renewal-interval-in-seconds: 15
+    lease-expiration-duration-in-seconds: 45
+    org.springframework.kafka: WARN

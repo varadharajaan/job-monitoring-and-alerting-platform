@@ -26,6 +26,7 @@ public class PlatformProperties {
     private final KafkaConfig kafka = new KafkaConfig();
     private final CacheConfig cache = new CacheConfig();
     private final S3Config s3 = new S3Config();
+    private final AzureConfig azure = new AzureConfig();
     private final NotificationConfig notification = new NotificationConfig();
     private final JobMonitorConfig jobMonitor = new JobMonitorConfig();
     private final JobQueueConfig jobQueue = new JobQueueConfig();
@@ -170,5 +171,19 @@ public class PlatformProperties {
         private String[] adminPaths = {
             "/actuator/**"
         };
+    }
+
+    // ═══════════════ Azure (Blob Storage, Event Hubs) ═══════════════
+
+    @Getter @Setter
+    public static class AzureConfig {
+        private BlobStorage blobStorage = new BlobStorage();
+
+        @Getter @Setter
+        public static class BlobStorage {
+            private boolean enabled = false;
+            private String connectionString;
+            private String containerName = "jobmonitor-logs";
+        }
     }
 }

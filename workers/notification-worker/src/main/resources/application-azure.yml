@@ -1,0 +1,48 @@
+# Azure profile for notification-worker
+spring:
+  kafka:
+    bootstrap-servers: ${AZURE_EVENTHUBS_BOOTSTRAP}
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="$$ConnectionString"
+        password="${AZURE_EVENTHUBS_CONNECTION_STRING}";
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+  data:
+    redis:
+      host: ${AZURE_REDIS_HOST}
+      port: ${AZURE_REDIS_PORT:6380}
+      password: ${AZURE_REDIS_PASSWORD}
+      ssl:
+        enabled: true
+
+platform:
+  notification:
+    rate-limit:
+      email: 50
+      sms: 25
+      slack: 100
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+logging:
+  level:
+    root: WARN
+    com.jobmonitor: INFO
+
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}
