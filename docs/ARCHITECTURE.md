@@ -23,6 +23,9 @@
 14. [Observability Stack](#14-observability-stack)
 15. [Security Architecture](#15-security-architecture)
 16. [Technology Decisions](#16-technology-decisions)
+17. [Service Discovery Architecture](#17-service-discovery-architecture)
+18. [Azure Dual-Cloud Architecture](#18-azure-dual-cloud-architecture)
+19. [Scheduled Tasks & Background Processing](#19-scheduled-tasks--background-processing)
 
 ---
 
@@ -34,9 +37,11 @@ monorepo:
 | Concern               | Status     | Description                                    |
 |-----------------------|------------|----------------------------------------------- |
 | Job Monitoring        | Active     | Cron monitoring, SLA tracking, execution audit |
-| Multi-Channel Alerts  | Active     | Rule engine, severity-based escalation         |
-| Notification Dispatch | Active     | Email/SMS/Slack/Push with templates, rate-limit|
-| Background Job Queue  | Active     | Priority queue, retries, dead-letter           |
+| Multi-Channel Alerts  | Active     | Rule engine, Kafka-driven event evaluation     |
+| Notification Dispatch | Active     | Email/SMS/Slack/Push/Webhook with templates    |
+| Background Job Queue  | Active     | Priority queue, retries, dead-letter, stats    |
+| Service Discovery     | Active     | Spring Cloud Netflix Eureka                    |
+| Azure Cloud Ready     | Active     | Dual-cloud: AWS prod + Azure profiles          |
 | Log Aggregation       | Future     | JSONL -> S3 -> Athena (infrastructure ready)   |
 | DB Query Analyzer     | Future     | Slow query detection, index suggestions        |
 
@@ -58,15 +63,17 @@ monorepo:
 +------+----------+----------+----------+----------+--------------------------------+
        |          |          |          |          |
        v          v          v          v          v
-+----------+ +----------+ +----------+ +----------+ +----------+
-|  AUTH    | |  JOB     | | ALERTING | | NOTIF    | | JOB      |
-|  SERVICE | | MONITOR  | | SERVICE  | | SERVICE  | | QUEUE    |
-|  :8081   | |  :8082   | |  :8083   | |  :8084   | | SERVICE  |
-|          | |          | |          | |          | |  :8085   |
-| JWT Auth | | Exec     | | Rule     | | Template | | Priority |
-| Token    | | Tracking | | Engine   | | Render   | | Dispatch |
-| Refresh  | | SLA Eval | | Escalate | | Channels | | Locking  |
-+----+-----+ +----+-----+ +----+-----+ +----+-----+ +----+-----+
++----------+ +----------+ +----------+ +----------+ +----------+  +----------+
+|  AUTH    | |  JOB     | | ALERTING | | NOTIF    | | JOB      |  | EUREKA   |
+|  SERVICE | | MONITOR  | | SERVICE  | | SERVICE  | | QUEUE    |  | SERVER   |
+|  :8081   | |  :8082   | |  :8083   | |  :8084   | | SERVICE  |  |  :8761   |
+|          | |          | |          | |          | |  :8085   |  |          |
+| JWT Auth | | Exec     | | Kafka    | | Email    | | Priority |  | Service  |
+| Token    | | Tracking | | Consumer | | Slack    | | Dispatch |  | Registry |
+| Refresh  | | SLA Eval | | Rules    | | SMS/Push | | Stats    |  | Heartbeat|
+|          | | Heartbeat| | Escalate | | Webhook  | | Locking  |  |          |
+|          | | Retry    | |          | |          | | Cleanup  |  |          |
++----+-----+ +----+-----+ +----+-----+ +----+-----+ +----+-----+  +----------+
      |             |            |            |            |
      +------+------+------+-----+------+-----+------+----+
             |             |            |             |
@@ -147,12 +154,15 @@ settings.gradle
     |
     +-- services/
     |       +-- config-server     (:8888) Spring Cloud Config Server
+    |       +-- eureka-server     (:8761) Service Discovery Registry
     |       +-- auth-service      (:8081) JWT authentication
     |       +-- ingestion-gateway (:8080) API gateway + rate limiting
     |       +-- job-monitoring    (:8082) Core job monitoring + SLA evaluation
-    |       +-- alerting-service  (:8083) Alert rule engine
-    |       +-- notification-svc  (:8084) Multi-channel dispatch
-    |       +-- job-queue-service (:8085) Background job queue
+    |       |                             + SLA scheduler, heartbeat monitor
+    |       |                             + retry engine (exponential backoff)
+    |       +-- alerting-service  (:8083) Alert rule engine + Kafka consumer
+    |       +-- notification-svc  (:8084) Multi-channel dispatch (5 channels)
+    |       +-- job-queue-service (:8085) Background job queue + stats + cleanup
     |
     +-- workers/
             +-- job-worker        (headless) Background job processor
@@ -182,6 +192,7 @@ settings.gradle
 +------+------------------------------------+--------+-------------------+
 | Type | Service                            |  Port  | Kafka Group       |
 +------+------------------------------------+--------+-------------------+
+| DISC | eureka-server                      |  8761  | --                |
 | INFRA| config-server                      |  8888  | --                |
 | INFRA| auth-service                       |  8081  | --                |
 | GW   | ingestion-gateway                  |  8080  | --                |
@@ -202,6 +213,15 @@ Infrastructure containers:
 | MON  | Prometheus                         |  9090  |
 | MON  | Grafana                            |  3000  |
 +------+------------------------------------+--------+
+
+Azure cloud equivalents (activated via `--spring.profiles.active=azure`):
++------+------------------------------------+-----------------------------------+
+| DB   | Azure Database for PostgreSQL     | Flexible Server, SSL required      |
+| CACHE| Azure Cache for Redis              | SSL, port 6380                    |
+| MSG  | Azure Event Hubs                   | Kafka-compatible, SASL_SSL/PLAIN  |
+| CLOUD| Azure Blob Storage                 | Conditional via platform.azure.*  |
+| DISC | Eureka Server                      | Auto-enabled in azure profile     |
++------+------------------------------------+-----------------------------------+
 ```
 
 ---
@@ -720,6 +740,7 @@ Every response follows ApiError JSON:
 | Cache                     | Redis 7                   | Sub-ms latency, per-cache TTLs, rate limiting           |
 | Object storage            | S3 (LocalStack for dev)   | Athena-queryable log archive, cost-effective            |
 | Config management         | Spring Cloud Config       | Centralized, profile-based, git-backed                  |
+| Service discovery         | Netflix Eureka            | Heartbeat-based, self-preservation, dashboard UI        |
 | Auth                      | JWT (jjwt 0.12.5)         | Stateless, scalable, standard claims                    |
 | Code generation           | Lombok + MapStruct 1.5.5  | Reduce boilerplate, compile-time mapping                |
 | Resilience                | Resilience4j 2.2.0        | Circuit breaker, retry, rate limiter                    |
@@ -727,3 +748,170 @@ Every response follows ApiError JSON:
 | Testing                   | JUnit 5 + Testcontainers  | Real infra in tests, no mocking DB/Kafka                |
 | Observability             | Micrometer + Prometheus   | Standard metrics, Grafana dashboards                    |
 | Container orchestration   | Docker Compose            | Simple local dev, production uses K8 (future)           |
+| Cloud (primary)           | AWS (S3, SES, SNS)        | Mature ecosystem, LocalStack for dev                    |
+| Cloud (secondary)         | Azure (Event Hubs, Redis, PG, Blob) | Dual-cloud, $200/mo credit tier        |
+
+---
+
+## 17. Service Discovery Architecture
+
+```
++------------------------------------------------------------------+
+|                    Eureka Service Discovery                       |
++------------------------------------------------------------------+
+|                                                                   |
+|  +----------------------------+                                   |
+|  | Eureka Server (:8761)      |                                   |
+|  | @EnableEurekaServer        |                                   |
+|  | HTTP Basic auth            |                                   |
+|  | Self-preservation enabled  |                                   |
+|  +----------------------------+                                   |
+|          ^         ^        ^                                     |
+|          |         |        |                                     |
+|    register   heartbeat  fetch-registry                           |
+|          |         |        |                                     |
+|  +-------+---------+--------+------+                              |
+|  |       |         |        |      |                              |
+|  v       v         v        v      v                              |
+|  +------+ +------+ +------+ +------+ +------+ +------+ +------+  |
+|  |:8080 | |:8081 | |:8082 | |:8083 | |:8084 | |:8085 | |wrkrs |  |
+|  |gate  | |auth  | |job   | |alert | |notif | |queue | |2x    |  |
+|  |way   | |svc   | |mon   | |svc   | |svc   | |svc   | |head  |  |
+|  +------+ +------+ +------+ +------+ +------+ +------+ +------+  |
+|                                                                   |
+|  Activation:                                                      |
+|  - Disabled by default: eureka.client.enabled=${EUREKA_ENABLED:false} |
+|  - Auto-enabled in Azure profile (application-azure.yml)          |
+|  - Instance ID: ${spring.application.name}:${random.uuid}        |
+|  - Prefer IP address: true                                        |
++------------------------------------------------------------------+
+```
+
+---
+
+## 18. Azure Dual-Cloud Architecture
+
+```
++------------------------------------------------------------------+
+|              Dual-Cloud Deployment Model                         |
++------------------------------------------------------------------+
+|                                                                   |
+|  LOCAL / AWS (default profile)        AZURE (azure profile)       |
+|  ==============================      ========================    |
+|                                                                   |
+|  TimescaleDB (Docker)         <-->  Azure DB for PostgreSQL       |
+|  Apache Kafka 3.7.0 (Docker)  <-->  Azure Event Hubs (Kafka API) |
+|  Redis 7 (Docker)             <-->  Azure Cache for Redis (SSL)   |
+|  LocalStack S3 (Docker)       <-->  Azure Blob Storage            |
+|  No service discovery         <-->  Eureka Server (:8761)         |
+|  Prometheus + Grafana          <-->  Azure Monitor (future)        |
+|                                                                   |
++------------------------------------------------------------------+
+|                                                                   |
+|  Profile activation:                                              |
+|    SPRING_PROFILES_ACTIVE=azure                                   |
+|                                                                   |
+|  Each module has:                                                 |
+|    application.yml          (default, local/docker/AWS)           |
+|    application-azure.yml    (Azure-specific overrides)            |
+|                                                                   |
+|  Azure Event Hubs Kafka Config:                                   |
+|    security.protocol: SASL_SSL                                    |
+|    sasl.mechanism: PLAIN                                          |
+|    sasl.jaas.config: $$ConnectionString + connection string       |
+|                                                                   |
+|  Azure Redis:                                                     |
+|    Port: 6380 (SSL)                                               |
+|    ssl.enabled: true                                              |
+|                                                                   |
+|  Azure PostgreSQL:                                                |
+|    ?sslmode=require on JDBC URL                                   |
+|                                                                   |
+|  Estimated Azure cost: ~$150-200/month                            |
+|    - Azure DB for PostgreSQL Flexible: ~$50/mo (B1ms)             |
+|    - Azure Event Hubs Standard: ~$25/mo                           |
+|    - Azure Cache for Redis Basic: ~$16/mo                         |
+|    - Azure Blob Storage: ~$5/mo                                   |
+|    - Azure Container Instances (9 services): ~$80/mo              |
++------------------------------------------------------------------+
+```
+
+---
+
+## 19. Scheduled Tasks & Background Processing
+
+```
++------------------------------------------------------------------+
+|                    Scheduled Task Architecture                    |
++------------------------------------------------------------------+
+|                                                                   |
+|  job-monitoring-service (:8082)                                   |
+|  ┌─────────────────────────────────────────────────────────────┐  |
+|  │                                                             │  |
+|  │  SlaEvaluationScheduler                                     │  |
+|  │    @Scheduled(cron = "0 */5 * * * *")                       │  |
+|  │    ─ Queries active jobs with SLA configured                │  |
+|  │    ─ Checks latest execution durationMs vs slaSeconds       │  |
+|  │    ─ Publishes SLA_VIOLATED JobEvent to Kafka               │  |
+|  │                                                             │  |
+|  │  HeartbeatMonitorScheduler                                  │  |
+|  │    @Scheduled(fixedDelay = 60000ms)                         │  |
+|  │    ─ Checks active SCHEDULED jobs for missing heartbeats    │  |
+|  │    ─ Grace period: expectedRuntime + gracePeriod            │  |
+|  │    ─ Publishes HEARTBEAT_MISSED JobEvent to Kafka           │  |
+|  │                                                             │  |
+|  │  ExponentialBackoffRetryExecutor                            │  |
+|  │    ─ Implements RetryExecutor<T> functional interface       │  |
+|  │    ─ delay = BASE_DELAY * backoffMultiplier^(attempt-1)     │  |
+|  │    ─ Configurable via platform.job-monitor.retryBackoff     │  |
+|  │                                                             │  |
+|  │  JobRetryService + JobRetryController                       │  |
+|  │    ─ POST /api/v1/jobs/{jobId}/retry                        │  |
+|  │    ─ Validates job is ACTIVE, publishes RETRYING event      │  |
+|  │                                                             │  |
+|  └─────────────────────────────────────────────────────────────┘  |
+|                                                                   |
+|  alerting-service (:8083)                                         |
+|  ┌─────────────────────────────────────────────────────────────┐  |
+|  │                                                             │  |
+|  │  AlertEventListener (Kafka Consumer)                        │  |
+|  │    @KafkaListener(topics = "job-events")                    │  |
+|  │    ─ Filters: FAILED, SLA_VIOLATED, HEARTBEAT_MISSED,      │  |
+|  │              COMPLETED                                      │  |
+|  │    ─ Builds evaluation context (failureCount, durationMs)   │  |
+|  │    ─ Delegates to AlertService.evaluateRules()              │  |
+|  │    ─ ErrorHandlingDeserializer + MANUAL_IMMEDIATE ack       │  |
+|  │                                                             │  |
+|  └─────────────────────────────────────────────────────────────┘  |
+|                                                                   |
+|  notification-service (:8084)                                     |
+|  ┌─────────────────────────────────────────────────────────────┐  |
+|  │                                                             │  |
+|  │  ChannelDispatcherConfig — 5 real channels:                 │  |
+|  │    ─ EMAIL:   JavaMailSender (SMTP / AWS SES)               │  |
+|  │    ─ SLACK:   RestTemplate → webhook URL (JSON payload)     │  |
+|  │    ─ SMS:     Placeholder for Twilio / AWS SNS              │  |
+|  │    ─ PUSH:    Placeholder for FCM / Azure Notification Hubs │  |
+|  │    ─ WEBHOOK: RestTemplate → recipient URL (generic HTTP)   │  |
+|  │                                                             │  |
+|  │  Injected as Map<String, NotificationDispatcher> bean       │  |
+|  │                                                             │  |
+|  └─────────────────────────────────────────────────────────────┘  |
+|                                                                   |
+|  job-queue-service (:8085)                                        |
+|  ┌─────────────────────────────────────────────────────────────┐  |
+|  │                                                             │  |
+|  │  QueueTimeoutCleanupScheduler                               │  |
+|  │    @Scheduled(fixedDelay = 5000ms)                          │  |
+|  │    ─ Finds PROCESSING items with expired lockedUntil        │  |
+|  │    ─ Releases to PENDING or moves to DEAD_LETTER            │  |
+|  │                                                             │  |
+|  │  QueueStatsService + GET /api/v1/queue/stats                │  |
+|  │    ─ Returns counts per status: pending, processing,        │  |
+|  │      completed, failed, deadLetter, cancelled               │  |
+|  │    ─ Includes processingRate metric                         │  |
+|  │                                                             │  |
+|  └─────────────────────────────────────────────────────────────┘  |
+|                                                                   |
++------------------------------------------------------------------+
+```

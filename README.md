@@ -4,7 +4,7 @@
 [![Spring Boot 3.2.5](https://img.shields.io/badge/Spring_Boot-3.2.5-green)](https://spring.io/projects/spring-boot)
 [![Gradle 8.7](https://img.shields.io/badge/Gradle-8.7-02303A)](https://gradle.org/)
 
-A unified, production-grade enterprise platform for **scheduled job monitoring**, **intelligent alerting**, **multi-channel notifications**, and **multi-tenant background job queuing** — built as a Gradle multi-module monorepo with Spring Boot 3.2.5, Kafka 3.7, TimescaleDB, and Redis.
+A unified, production-grade enterprise platform for **scheduled job monitoring**, **intelligent alerting**, **multi-channel notifications**, and **multi-tenant background job queuing** — built as a Gradle multi-module monorepo with Spring Boot 3.2.5, Kafka 3.7, TimescaleDB, Redis, and **dual-cloud support (AWS + Azure)**.
 
 ---
 
@@ -55,7 +55,7 @@ A unified, production-grade enterprise platform for **scheduled job monitoring**
 
 ## Modules
 
-This is a Gradle multi-module monorepo with 11 modules:
+This is a Gradle multi-module monorepo with 12 modules:
 
 ```
 job-monitoring-and-alerting-platform/
@@ -65,12 +65,13 @@ job-monitoring-and-alerting-platform/
 |   +-- schema/                       Flyway SQL migrations (V001-V006)
 +-- services/
 |   +-- config-server/                Spring Cloud Config (:8888)
+|   +-- eureka-server/                Service Discovery Registry (:8761)
 |   +-- auth-service/                 JWT authentication (:8081)
 |   +-- ingestion-gateway/            API gateway + rate limiting (:8080)
-|   +-- job-monitoring-service/       Job registration + execution tracking (:8082)
-|   +-- alerting-service/             Alert rules + evaluation (:8083)
-|   +-- notification-service/         Template-driven notifications (:8084)
-|   +-- job-queue-service/            Background job queue (:8085)
+|   +-- job-monitoring-service/       Job registration + execution + SLA + retry (:8082)
+|   +-- alerting-service/             Alert rules + Kafka event evaluation (:8083)
+|   +-- notification-service/         5-channel notifications + templates (:8084)
+|   +-- job-queue-service/            Background job queue + stats (:8085)
 +-- workers/
 |   +-- job-worker/                   Queue consumer (headless)
 |   +-- notification-worker/          Notification delivery (headless)
@@ -89,7 +90,9 @@ job-monitoring-and-alerting-platform/
 | **Database**  | PostgreSQL 16 + TimescaleDB (hypertables, aggregates) |
 | **Cache**     | Redis 7 (5 named caches, rate limiting)            |
 | **Cloud**     | AWS SDK 2.25.16, LocalStack (S3 log archive)       |
-| **Security**  | jjwt 0.12.5, Bucket4j rate limiting               |
+| **Cloud Alt** | Azure (Event Hubs, Cache for Redis, PG, Blob)      |
+| **Discovery** | Spring Cloud Netflix Eureka                         |
+| **Security**  | jjwt 0.12.5, Bucket4j rate limiting                |
 | **Resilience**| Resilience4j 2.2.0                                 |
 | **Mapping**   | MapStruct 1.5.5                                    |
 | **Docs**      | SpringDoc OpenAPI 2.5.0                            |
@@ -127,6 +130,9 @@ This starts TimescaleDB (:5432), Kafka (:9092), Redis (:6379), LocalStack (:4566
 # Config server must start first
 ./gradlew :services:config-server:bootRun
 
+# Eureka server (for service discovery)
+./gradlew :services:eureka-server:bootRun
+
 # Then start remaining services (in separate terminals)
 ./gradlew :services:auth-service:bootRun
 ./gradlew :services:ingestion-gateway:bootRun
@@ -163,9 +169,11 @@ Open Swagger UI for any service:
 | Feature                    | Description                                                   |
 |---------------------------|---------------------------------------------------------------|
 | **Job Monitoring**        | Cron tracking, SLA enforcement, execution history, retry      |
-| **Intelligent Alerting**  | Rule engine with failure threshold, SLA violation, heartbeat  |
-| **Multi-Channel Notify**  | Email, SMS, Slack, Push — with templates and rate limiting    |
-| **Background Job Queue**  | Priority queue, locking, retry, dead-letter handling          |
+| **Intelligent Alerting**  | Rule engine with Kafka-driven event evaluation                |
+| **Multi-Channel Notify**  | Email, SMS, Slack, Push, Webhook — with templates + rate limit|
+| **Background Job Queue**  | Priority queue, locking, retry, dead-letter, stats endpoint   |
+| **Service Discovery**     | Netflix Eureka server + client auto-registration              |
+| **Azure Cloud Ready**     | Dual-cloud profiles: AWS (default) + Azure (azure profile)    |
 | **Multi-Tenancy**         | Tenant isolation via partition key, JWT claim propagation     |
 | **Time-Series Analytics** | TimescaleDB hypertables, continuous aggregates, 90d retention |
 | **Centralized Config**    | Spring Cloud Config Server with profile-based overrides       |

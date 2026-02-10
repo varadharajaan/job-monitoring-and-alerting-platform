@@ -17,8 +17,9 @@
 8. [Ingestion Gateway](#8-ingestion-gateway-8080)
 9. [Auth Service](#9-auth-service-8081)
 10. [Actuator Endpoints](#10-actuator-endpoints)
-11. [Kafka Topics](#11-kafka-topics)
-12. [Error Codes Reference](#12-error-codes-reference)
+11. [Eureka Server](#11-eureka-server)
+12. [Kafka Topics](#12-kafka-topics)
+13. [Error Codes Reference](#13-error-codes-reference)
 
 ---
 
@@ -254,6 +255,37 @@ Validation error (with field details):
 | `from`    | ISO    | Start of time range          | `2026-02-01T00:00:00Z` |
 | `to`      | ISO    | End of time range            | `2026-02-10T00:00:00Z` |
 
+### 4.4 Job Retry
+
+```
++--------+------------------------------+----------------------------------+
+| Method | Path                         | Description                      |
++--------+------------------------------+----------------------------------+
+| POST   | /api/v1/jobs/{jobId}/retry   | Retry a failed/active job        |
++--------+------------------------------+----------------------------------+
+```
+
+**POST /api/v1/jobs/{jobId}/retry** — Trigger retry with exponential backoff
+
+```json
+// Response: 200 OK
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "RETRYING",
+    "attemptNumber": 2,
+    "nextRetryAt": "2026-02-10T12:05:00Z"
+  }
+}
+```
+
+Retry uses exponential backoff: `delay = BASE_DELAY × backoffMultiplier^(attempt-1)`
+
+Error responses:
+- `404` — Job not found
+- `400` — Job is not in a retryable state
+
 ---
 
 ## 5. Alerting API (:8083)
@@ -435,6 +467,35 @@ Validation error (with field details):
 }
 ```
 
+### 7.2 Queue Statistics
+
+```
++--------+-----------------------------------+----------------------------------+
+| Method | Path                              | Description                      |
++--------+-----------------------------------+----------------------------------+
+| GET    | /api/v1/queue/stats               | Get queue statistics             |
++--------+-----------------------------------+----------------------------------+
+```
+
+**GET /api/v1/queue/stats** — Real-time queue metrics
+
+```json
+// Response: 200 OK
+{
+  "success": true,
+  "data": {
+    "pendingCount": 42,
+    "processingCount": 8,
+    "completedCount": 1234,
+    "failedCount": 15,
+    "deadLetterCount": 3,
+    "cancelledCount": 2,
+    "totalCount": 1304,
+    "processingRate": 12.5
+  }
+}
+```
+
 ---
 
 ## 8. Ingestion Gateway (:8080)
@@ -529,7 +590,43 @@ Prometheus scrapes all service metrics every 15 seconds at `/actuator/prometheus
 
 ---
 
-## 11. Kafka Topics
+## 11. Eureka Server (:8761)
+
+Service discovery dashboard and registry API.
+
+**Dashboard:** `http://localhost:8761` (HTTP Basic auth: `EUREKA_USER` / `EUREKA_PASSWORD`)
+
+```
++--------+------------------------------+----------------------------------+
+| Method | Path                         | Description                      |
++--------+------------------------------+----------------------------------+
+| GET    | /                            | Eureka dashboard (HTML)          |
+| GET    | /eureka/apps                 | List registered services (XML)   |
+| GET    | /eureka/apps/{appId}         | Get instances of a service       |
+| GET    | /actuator/health             | Eureka server health             |
++--------+------------------------------+----------------------------------+
+```
+
+**Activation:**
+- Disabled by default for local dev (`eureka.client.enabled=false`)
+- Enabled in Azure profile (`application-azure.yml`)
+- Set `EUREKA_ENABLED=true` + `EUREKA_URL=http://user:pass@eureka:8761/eureka`
+
+**Client registration (all services):**
+```yaml
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:false}
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}
+```
+
+---
+
+## 12. Kafka Topics
 
 ```
 +-------------------------------------+-----------+----------+---------------------------+
@@ -566,7 +663,7 @@ Consumer Groups:
 
 ---
 
-## 12. Error Codes Reference
+## 13. Error Codes Reference
 
 Complete list of error codes returned in `ApiError.errorCode`:
 

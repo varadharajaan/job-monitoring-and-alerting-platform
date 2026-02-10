@@ -64,6 +64,7 @@ This starts:
 | Kafka (KRaft)     | 9092   | kafka-broker-api-versions.sh      |
 | Redis             | 6379   | redis-cli -a redis_secret ping    |
 | LocalStack (S3)   | 4566   | curl http://localhost:4566        |
+| Eureka Server     | 8761   | curl http://localhost:8761/actuator/health |
 | Prometheus        | 9090   | http://localhost:9090/-/ready     |
 | Grafana           | 3000   | http://localhost:3000 (admin/admin)|
 +-------------------+--------+-----------------------------------+
@@ -81,7 +82,10 @@ aws --endpoint-url=http://localhost:4566 s3 mb s3://job-monitor-logs
 # Terminal 1: Config Server (start first, other services depend on it)
 ./gradlew :services:config-server:bootRun
 
-# Terminal 2: Auth Service
+# Terminal 2: Eureka Server (start before other services for discovery)
+./gradlew :services:eureka-server:bootRun
+
+# Terminal 3: Auth Service
 ./gradlew :services:auth-service:bootRun
 
 # Terminal 3: Ingestion Gateway
@@ -186,6 +190,13 @@ Phase 1 (Infrastructure):        Phase 2 (Platform):
 | Redis             |            +-------------------+
 | LocalStack        |                    |
 +-------------------+                    v
+                                 Phase 2.5 (Discovery):
+                                 +-------------------+
+                                 | eureka-server     |
+                                 | :8761             |
+                                 +-------------------+
+                                         |
+                                         v
                                  Phase 3 (Auth):
                                  +-------------------+
                                  | auth-service      |
@@ -293,6 +304,31 @@ Phase 1 (Infrastructure):        Phase 2 (Platform):
 | `RATE_LIMIT_RPM`    | `60`    | Requests per minute      |
 | `RATE_LIMIT_BURST`  | `10`    | Burst capacity           |
 
+### 5.9 Eureka Service Discovery
+
+| Variable              | Default                                    | Description              |
+|----------------------|---------------------------------------------|--------------------------|
+| `EUREKA_ENABLED`     | `false`                                     | Enable Eureka client     |
+| `EUREKA_URL`         | `http://localhost:8761/eureka`              | Eureka server URL        |
+| `EUREKA_USER`        | `eureka`                                    | Eureka HTTP Basic user   |
+| `EUREKA_PASSWORD`    | `eureka_secret`                             | Eureka HTTP Basic pass   |
+
+### 5.10 Azure Cloud (azure profile)
+
+| Variable                           | Default | Description                          |
+|-----------------------------------|---------|--------------------------------------|
+| `AZURE_DB_URL`                    |         | Azure PG JDBC URL (?sslmode=require) |
+| `AZURE_DB_USERNAME`               |         | Azure PG username                    |
+| `AZURE_DB_PASSWORD`               |         | Azure PG password                    |
+| `AZURE_EVENTHUBS_BOOTSTRAP`       |         | Event Hubs Kafka endpoint            |
+| `AZURE_EVENTHUBS_CONNECTION_STRING`|        | Event Hubs shared access policy      |
+| `AZURE_REDIS_HOST`                |         | Azure Cache for Redis hostname       |
+| `AZURE_REDIS_PORT`                | `6380`  | Azure Redis SSL port                 |
+| `AZURE_REDIS_PASSWORD`            |         | Azure Redis access key               |
+| `AZURE_BLOB_ENABLED`              | `false` | Enable Azure Blob Storage            |
+| `AZURE_STORAGE_CONNECTION_STRING` |         | Azure Storage account conn string    |
+| `AZURE_LOG_CONTAINER`             | `logs`  | Blob container for log uploads       |
+
 ---
 
 ## 6. Spring Profiles
@@ -300,6 +336,7 @@ Phase 1 (Infrastructure):        Phase 2 (Platform):
 | Profile   | Description                                      | Usage                       |
 |----------|--------------------------------------------------|-----------------------------|
 | `local`  | Default. Debug logging, SQL logging, LocalStack  | `SPRING_PROFILES_ACTIVE=local` |
+| `azure`  | Azure cloud: Event Hubs, Azure Redis, Azure PG   | `SPRING_PROFILES_ACTIVE=azure` |
 | `prod`   | Warn logging, higher pool sizes, real AWS        | `SPRING_PROFILES_ACTIVE=prod`  |
 | `native` | Config server file-based config                  | config-server only          |
 
@@ -323,6 +360,7 @@ docker compose -f deploy/docker/docker-compose.yml ps
 
 # Service health checks
 curl -s http://localhost:8888/actuator/health | jq .  # config-server
+curl -s http://localhost:8761/actuator/health | jq .  # eureka-server
 curl -s http://localhost:8081/actuator/health | jq .  # auth-service
 curl -s http://localhost:8080/actuator/health | jq .  # gateway
 curl -s http://localhost:8082/actuator/health | jq .  # job-monitoring
