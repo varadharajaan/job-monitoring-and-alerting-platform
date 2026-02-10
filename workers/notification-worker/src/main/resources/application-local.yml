@@ -1,0 +1,12 @@
+# ═══════════════════════════════════════════════════════════════
+# Local development overrides — notification-worker
+# ═══════════════════════════════════════════════════════════════
+spring:
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+
+logging:
+  level:
+    com.jobmonitor: DEBUG
+    org.springframework.kafka: DEBUG

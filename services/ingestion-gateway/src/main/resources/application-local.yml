@@ -1,0 +1,15 @@
+# ═══════════════════════════════════════════════════════════════
+# Local development overrides — ingestion-gateway
+# ═══════════════════════════════════════════════════════════════
+spring:
+  jpa:
+    show-sql: true
+
+platform:
+  s3:
+    enabled: true
+    endpoint: ${S3_ENDPOINT:http://localhost:4566}
+
+logging:
+  level:
+    com.jobmonitor: DEBUG

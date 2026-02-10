@@ -1,0 +1,14 @@
+# ═══════════════════════════════════════════════════════════════
+# Local development overrides — job-queue-service
+# ═══════════════════════════════════════════════════════════════
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.jobmonitor: DEBUG
+    org.hibernate.SQL: DEBUG

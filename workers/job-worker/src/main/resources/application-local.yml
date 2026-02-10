@@ -1,0 +1,12 @@
+# ═══════════════════════════════════════════════════════════════
+# Local development overrides — job-worker
+# ═══════════════════════════════════════════════════════════════
+platform:
+  s3:
+    enabled: true
+    endpoint: ${S3_ENDPOINT:http://localhost:4566}
+
+logging:
+  level:
+    com.jobmonitor: DEBUG
+    org.springframework.kafka: DEBUG

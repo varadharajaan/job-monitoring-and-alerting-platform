@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
  * Acquires distributed locks to prevent duplicate processing.
  * Reports execution status back to job-queue-service via Kafka.
  */
-@SpringBootApplication(scanBasePackages = {"com.jobmonitor.worker.job", "com.jobmonitor.platform.common"})
+@SpringBootApplication(scanBasePackages = {"com.jobmonitor.worker", "com.jobmonitor.platform.common"})
 @ConfigurationPropertiesScan(basePackages = "com.jobmonitor.platform.common.config")
 @EnableJpaAuditing
 public class JobWorkerApplication {
