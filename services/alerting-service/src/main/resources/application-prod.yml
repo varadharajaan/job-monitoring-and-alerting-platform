@@ -1,6 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
-# Production profile — AWS managed services (MSK, RDS, ElastiCache)
-# Activated via: SPRING_PROFILES_ACTIVE=prod
+# AWS Production profile — alerting-service
 # ═══════════════════════════════════════════════════════════════
 
 spring:
@@ -9,20 +8,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
-      maximum-pool-size: ${DB_POOL_SIZE:30}
-      minimum-idle: ${DB_POOL_MIN_IDLE:10}
-      connection-timeout: ${DB_CONN_TIMEOUT:30000}
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      maximum-pool-size: ${DB_POOL_SIZE:25}
+      minimum-idle: ${DB_POOL_MIN_IDLE:8}
   jpa:
     show-sql: false
-    properties:
-      hibernate:
-        default_schema: public
-        jdbc:
-          batch_size: 25
-        order_inserts: true
-        order_updates: true
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP:b-1.msk-cluster.xxxxx.kafka.us-east-1.amazonaws.com:9092}
     properties:
@@ -31,14 +20,6 @@ spring:
       sasl.jaas.config: >
         software.amazon.msk.auth.iam.IAMLoginModule required;
       sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
-    producer:
-      acks: all
-      retries: 3
-      batch-size: 16384
-      buffer-memory: 33554432
-    consumer:
-      auto-offset-reset: earliest
-      enable-auto-commit: false
   data:
     redis:
       host: ${REDIS_HOST:prod-elasticache.xxxxx.use1.cache.amazonaws.com}
@@ -46,9 +27,6 @@ spring:
       password: ${REDIS_PASSWORD}
       ssl:
         enabled: ${REDIS_SSL:true}
-      timeout: 5000ms
-  flyway:
-    enabled: true
 
 platform:
   kafka:
@@ -56,14 +34,6 @@ platform:
       default-replicas: ${KAFKA_DEFAULT_REPLICAS:3}
     listener:
       concurrency: ${KAFKA_LISTENER_CONCURRENCY:6}
-  s3:
-    enabled: true
-    bucket: ${S3_LOG_BUCKET:job-monitor-logs-prod}
-    region: ${AWS_REGION:us-east-1}
-  security:
-    public-paths:
-      - /actuator/health/**
-      - /actuator/info
   logging:
     dir: /var/log/jobmonitor
     max-file-size: 100MB
@@ -80,15 +50,8 @@ management:
       show-details: never
       probes:
         enabled: true
-  health:
-    livenessState:
-      enabled: true
-    readinessState:
-      enabled: true
 
 logging:
   level:
     root: WARN
     com.jobmonitor: INFO
-    org.springframework.kafka: WARN
-    org.hibernate.SQL: WARN

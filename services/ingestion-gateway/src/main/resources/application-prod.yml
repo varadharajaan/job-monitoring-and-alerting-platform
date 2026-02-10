@@ -1,0 +1,43 @@
+# ═══════════════════════════════════════════════════════════════
+# AWS Production profile — ingestion-gateway
+# ═══════════════════════════════════════════════════════════════
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:b-1.msk-cluster.xxxxx.kafka.us-east-1.amazonaws.com:9092}
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:AWS_MSK_IAM}
+      sasl.jaas.config: >
+        software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+  data:
+    redis:
+      host: ${REDIS_HOST:prod-elasticache.xxxxx.use1.cache.amazonaws.com}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: ${REDIS_SSL:true}
+
+platform:
+  logging:
+    dir: /var/log/jobmonitor
+    max-file-size: 100MB
+    max-history: 14
+    total-size-cap: 5GB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.jobmonitor: INFO
