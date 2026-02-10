@@ -1,28 +1,39 @@
 package com.jobmonitor.notifworker.service;
 
-import com.jobmonitor.platform.common.config.PlatformProperties;
 import com.jobmonitor.platform.common.event.NotificationEvent;
+import com.jobmonitor.platform.common.functional.NotificationDispatcher;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("NotificationDispatchService Unit Tests")
 class NotificationDispatchServiceTest {
-
-    @Mock private PlatformProperties platformProperties;
 
     private NotificationDispatchService dispatchService;
 
     @BeforeEach
     void setUp() {
-        dispatchService = new NotificationDispatchService(platformProperties);
+        Map<NotificationEvent.Channel, NotificationDispatcher> dispatchers = new EnumMap<>(NotificationEvent.Channel.class);
+        for (NotificationEvent.Channel ch : NotificationEvent.Channel.values()) {
+            NotificationDispatcher mock = mock(NotificationDispatcher.class);
+            when(mock.dispatch(anyString(), anyString(), anyString(), anyMap())).thenReturn("msg-" + ch.name());
+            dispatchers.put(ch, mock);
+        }
+        dispatchService = new NotificationDispatchService(dispatchers);
     }
 
     private NotificationEvent createEvent(NotificationEvent.Channel channel, NotificationEvent.Action action) {
