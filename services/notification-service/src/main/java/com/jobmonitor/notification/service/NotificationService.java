@@ -69,7 +69,8 @@ public class NotificationService {
                                 NotificationTemplateRepository templateRepository,
                                 NotificationMapper notificationMapper,
                                 PlatformProperties properties,
-                                EventPublisher<PlatformEvent> eventPublisher) {
+                                EventPublisher<PlatformEvent> eventPublisher,
+                                Map<String, NotificationDispatcher> channelDispatchers) {
         this.notificationRepository = notificationRepository;
         this.templateRepository = templateRepository;
         this.notificationMapper = notificationMapper;
@@ -90,29 +91,8 @@ public class NotificationService {
                 "PUSH", rateLimits.getPush()
         ).getOrDefault(channel.toUpperCase(), rateLimits.getEmail());
 
-        // Channel dispatchers — each is a NotificationDispatcher lambda
-        this.channelDispatchers = Map.of(
-                "EMAIL", (recipient, subject, body, metadata) -> {
-                    log.info("Dispatching EMAIL to={}, subject={}", recipient, subject);
-                    return "email-" + UUID.randomUUID().toString().substring(0, 8);
-                },
-                "SMS", (recipient, subject, body, metadata) -> {
-                    log.info("Dispatching SMS to={}", recipient);
-                    return "sms-" + UUID.randomUUID().toString().substring(0, 8);
-                },
-                "SLACK", (recipient, subject, body, metadata) -> {
-                    log.info("Dispatching SLACK to channel={}", recipient);
-                    return "slack-" + UUID.randomUUID().toString().substring(0, 8);
-                },
-                "PUSH", (recipient, subject, body, metadata) -> {
-                    log.info("Dispatching PUSH to device={}", recipient);
-                    return "push-" + UUID.randomUUID().toString().substring(0, 8);
-                },
-                "WEBHOOK", (recipient, subject, body, metadata) -> {
-                    log.info("Dispatching WEBHOOK to url={}", recipient);
-                    return "webhook-" + UUID.randomUUID().toString().substring(0, 8);
-                }
-        );
+        // Channel dispatchers — injected from ChannelDispatcherConfig
+        this.channelDispatchers = channelDispatchers;
     }
 
     // ──────────── Template CRUD ────────────

@@ -82,7 +82,14 @@ class NotificationServiceTest {
 
         notificationService = new NotificationService(
                 notificationRepository, templateRepository, notificationMapper,
-                properties, eventPublisher);
+                properties, eventPublisher,
+                java.util.Map.of(
+                    "EMAIL", (recipient, subject, body, metadata) -> "email-test-" + java.util.UUID.randomUUID().toString().substring(0, 8),
+                    "SMS", (recipient, subject, body, metadata) -> "sms-test-" + java.util.UUID.randomUUID().toString().substring(0, 8),
+                    "SLACK", (recipient, subject, body, metadata) -> "slack-test-" + java.util.UUID.randomUUID().toString().substring(0, 8),
+                    "PUSH", (recipient, subject, body, metadata) -> "push-test-" + java.util.UUID.randomUUID().toString().substring(0, 8),
+                    "WEBHOOK", (recipient, subject, body, metadata) -> "webhook-test-" + java.util.UUID.randomUUID().toString().substring(0, 8)
+                ));
     }
 
     // ──────────── Template Tests ────────────
