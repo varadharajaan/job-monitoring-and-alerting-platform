@@ -30,9 +30,9 @@ include ':services:notification-service'
 include ':services:job-monitoring-service'
 include ':services:job-queue-service'
 
-// ═══════════════ Future Services (Stage 2/3) ═══════════════
-// include ':services:log-ingestion-service'
-// include ':services:db-performance-service'
+// ═══════════════ Stage 2/3 Services ═══════════════
+include ':services:log-ingestion-service'
+include ':services:db-performance-service'
 
 // ═══════════════ Workers ═══════════════
 include ':workers:job-worker'

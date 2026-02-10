@@ -1,0 +1,72 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Log Ingestion Service — Deployment + Service
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-ingestion-service
+  namespace: jobmonitor
+  labels:
+    app: log-ingestion-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: log-ingestion-service
+  template:
+    metadata:
+      labels:
+        app: log-ingestion-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8086"
+    spec:
+      containers:
+        - name: log-ingestion-service
+          image: jobmonitor/log-ingestion-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: jobmonitor-config
+            - secretRef:
+                name: jobmonitor-secrets
+          env:
+            - name: LOG_INGESTION_PORT
+              value: "8086"
+            - name: ELASTICSEARCH_URIS
+              value: "http://elasticsearch:9200"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8086
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 300m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: log-ingestion-service
+  namespace: jobmonitor
+spec:
+  selector:
+    app: log-ingestion-service
+  ports:
+    - port: 8086
+      targetPort: 8086
+  type: ClusterIP

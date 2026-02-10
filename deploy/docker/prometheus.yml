@@ -9,7 +9,7 @@ alerting:
   alertmanagers:
     - static_configs:
         - targets: ['alertmanager:9093']
-        
+
 scrape_configs:
   # ═══════════════ Ingestion Gateway (8080) ═══════════════
   - job_name: 'ingestion-gateway'
@@ -74,3 +74,19 @@ scrape_configs:
       - targets: ['host.docker.internal:8888']
         labels:
           service: config-server
+
+  # ═══════════════ Log Ingestion Service (8086) ═══════════════
+  - job_name: 'log-ingestion-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8086']
+        labels:
+          service: log-ingestion-service
+
+  # ═══════════════ DB Performance Service (8087) ═══════════════
+  - job_name: 'db-performance-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8087']
+        labels:
+          service: db-performance-service

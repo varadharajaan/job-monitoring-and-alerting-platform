@@ -1,0 +1,9 @@
+apply from: "$rootDir/buildSrc/spring-boot-service.gradle"
+
+dependencies {
+    implementation project(':platform:common')
+    implementation project(':platform:schema')
+
+    // ── JDBC Template for raw SQL queries ──
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+}

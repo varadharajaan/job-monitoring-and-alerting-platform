@@ -1,0 +1,12 @@
+apply from: "$rootDir/buildSrc/spring-boot-service.gradle"
+
+dependencies {
+    implementation project(':platform:common')
+    implementation project(':platform:schema')
+
+    // ── Elasticsearch ──
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+    // ── Scheduling ──
+    implementation 'org.springframework.boot:spring-boot-starter-quartz'
+}

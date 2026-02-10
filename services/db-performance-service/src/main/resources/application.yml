@@ -1,0 +1,76 @@
+# ═══════════════════════════════════════════════════════════════════
+#  DB Performance Service — Configuration
+# ═══════════════════════════════════════════════════════════════════
+server:
+  port: ${DB_PERF_PORT:8087}
+
+spring:
+  application:
+    name: db-performance-service
+
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://config:config@localhost:8888}
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:jobmonitor}
+    username: ${POSTGRES_USER:jobmonitor}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 5000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: db_performance
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:changeme}
+
+app:
+  scheduler:
+    slow-query-interval-ms: ${SLOW_QUERY_INTERVAL_MS:300000}
+
+# ── Actuator & Metrics ──
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: db-performance-service
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+# ── Eureka ──
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:false}
+    service-url:
+      defaultZone: ${EUREKA_URL:http://eureka:eureka@localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+
+# ── Logging ──
+logging:
+  level:
+    com.jobmonitor.dbperf: DEBUG
