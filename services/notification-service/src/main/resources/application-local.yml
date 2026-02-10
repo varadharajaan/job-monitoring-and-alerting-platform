@@ -1,0 +1,17 @@
+# ═══════════════════════════════════════════════════════════════
+# Local development overrides — notification-service
+# ═══════════════════════════════════════════════════════════════
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+
+logging:
+  level:
+    com.jobmonitor: DEBUG
+    org.hibernate.SQL: DEBUG

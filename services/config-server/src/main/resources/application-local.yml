@@ -1,0 +1,7 @@
+# ═══════════════════════════════════════════════════════════════
+# Local development overrides — config-server
+# ═══════════════════════════════════════════════════════════════
+logging:
+  level:
+    com.jobmonitor: DEBUG
+    org.springframework.cloud.config: DEBUG

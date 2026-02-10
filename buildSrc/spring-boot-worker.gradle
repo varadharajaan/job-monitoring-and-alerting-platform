@@ -44,6 +44,7 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.testcontainers:kafka'
+    testImplementation testFixtures(project(':platform:common'))
     testRuntimeOnly   'com.h2database:h2'
 }
 

@@ -5,6 +5,7 @@
 
 plugins {
     id 'java-library'
+    id 'java-test-fixtures'
     id 'io.spring.dependency-management'
 }
 
@@ -27,6 +28,11 @@ dependencies {
     // ── AWS S3 ──
     api 'software.amazon.awssdk:s3'
 
+    // ── JWT (JJWT) ──
+    api 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
     // ── Jackson ──
     api 'com.fasterxml.jackson.core:jackson-databind'
     api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
@@ -40,6 +46,15 @@ dependencies {
 
     // ── Testing ──
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // ── Test Fixtures (shared by all modules via testFixtures(project(':platform:common'))) ──
+    testFixturesImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testFixturesImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testFixturesImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    testFixturesImplementation "org.testcontainers:kafka:${testcontainersVersion}"
+    testFixturesImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    testFixturesImplementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    testFixturesImplementation 'org.springframework.kafka:spring-kafka'
 }
 
 // This is a library JAR, not a Spring Boot application

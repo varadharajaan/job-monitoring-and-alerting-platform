@@ -1,0 +1,15 @@
+# ═══════════════════════════════════════════════════════════════
+# Local development overrides — alerting-service
+# All secrets injected from .env — zero hardcoded values
+# ═══════════════════════════════════════════════════════════════
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.jobmonitor: DEBUG
+    org.hibernate.SQL: DEBUG

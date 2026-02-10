@@ -216,7 +216,7 @@ Client                Gateway           Auth           Job Monitor         Kafka
   |--------------------->|                |                 |               |
   |                      |  Validate JWT  |                 |               |
   |                      |--------------->|                 |               |
-  |                      |  200 OK (claims)|                |               |
+  |                      | 200 OK (claims)|                 |               |
   |                      |<---------------|                 |               |
   |                      |                                  |               |
   |                      |  Rate-limit check (Bucket4j)     |               |
@@ -590,8 +590,7 @@ After max retries exhausted:
 |  +-------------------+-------------------+-----------------------+|
 +------------------------------------------------------------------+
 
-Exception Hierarchy:
-                                                                    
+Exception Hierarchy:                                                               
   RuntimeException                                                  
        |                                                            
   BusinessException (status, ErrorCode)                             
@@ -711,20 +710,20 @@ Every response follows ApiError JSON:
 ## 16. Technology Decisions
 
 | Decision                  | Choice                    | Rationale                                               |
-|---------------------------|---------------------------|--------------------------------------------------------|
+|---------------------------|---------------------------|-------------------------------------------------------- |
 | Runtime                   | Java 17                   | LTS, mature ecosystem, team expertise                   |
 | Language features         | Java 11 style only        | Broad compatibility, no records/sealed/pattern-matching |
-| Framework                 | Spring Boot 3.2.5         | Production-proven, excellent ecosystem                   |
-| Build                     | Gradle 8.7               | Faster than Maven, flexible multi-module                |
-| Time-series DB            | TimescaleDB (pg16)        | Hypertables, continuous aggregates, retention policies |
-| Message broker            | Kafka 3.7.0 (KRaft)      | High throughput, exactly-once, no ZooKeeper dependency |
-| Cache                     | Redis 7                   | Sub-ms latency, per-cache TTLs, rate limiting          |
+| Framework                 | Spring Boot 3.2.5         | Production-proven, excellent ecosystem                  |
+| Build                     | Gradle 8.7                | Faster than Maven, flexible multi-module                |
+| Time-series DB            | TimescaleDB (pg16)        | Hypertables, continuous aggregates, retention policies  |
+| Message broker            | Kafka 3.7.0 (KRaft)       | High throughput, exactly-once, no ZooKeeper dependency  |
+| Cache                     | Redis 7                   | Sub-ms latency, per-cache TTLs, rate limiting           |
 | Object storage            | S3 (LocalStack for dev)   | Athena-queryable log archive, cost-effective            |
 | Config management         | Spring Cloud Config       | Centralized, profile-based, git-backed                  |
-| Auth                      | JWT (jjwt 0.12.5)        | Stateless, scalable, standard claims                      |
-| Code generation           | Lombok + MapStruct 1.5.5  | Reduce boilerplate, compile-time mapping                     |
-| Resilience                | Resilience4j 2.2.0       | Circuit breaker, retry, rate limiter                     |
-| API docs                  | SpringDoc 2.5.0          | OpenAPI 3, auto-generated from annotations                 |
-| Testing                   | JUnit 5 + Testcontainers  | Real infra in tests, no mocking DB/Kafka                       |
-| Observability             | Micrometer + Prometheus   | Standard metrics, Grafana dashboards                   |
-| Container orchestration   | Docker Compose            | Simple local dev, production uses K8s (future)         |
+| Auth                      | JWT (jjwt 0.12.5)         | Stateless, scalable, standard claims                    |
+| Code generation           | Lombok + MapStruct 1.5.5  | Reduce boilerplate, compile-time mapping                |
+| Resilience                | Resilience4j 2.2.0        | Circuit breaker, retry, rate limiter                    |
+| API docs                  | SpringDoc 2.5.0           | OpenAPI 3, auto-generated from annotations              |
+| Testing                   | JUnit 5 + Testcontainers  | Real infra in tests, no mocking DB/Kafka                |
+| Observability             | Micrometer + Prometheus   | Standard metrics, Grafana dashboards                    |
+| Container orchestration   | Docker Compose            | Simple local dev, production uses K8 (future)           |

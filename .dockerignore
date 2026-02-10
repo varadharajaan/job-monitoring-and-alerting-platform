@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════════
+# Docker ignore — exclude build artifacts and dev files
+# ═══════════════════════════════════════════════════════════════
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+*.md
+LICENSE
+
+# Gradle
+.gradle/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Deploy manifests (not needed inside container)
+deploy/
+docs/
+
+# OS
+.DS_Store
+Thumbs.db
