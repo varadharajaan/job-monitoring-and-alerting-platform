@@ -7,9 +7,9 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/jobmonitor}
-    username: ${DB_USERNAME:jobmonitor}
-    password: ${DB_PASSWORD:jobmonitor_secret}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE:10}
       minimum-idle: ${DB_POOL_MIN_IDLE:2}
@@ -30,14 +30,14 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:redis_secret}
+      password: ${REDIS_PASSWORD}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
 
 # JWT Config
 auth:
   jwt:
-    secret: ${JWT_SECRET:change-me-in-production-this-is-dev-only-secret-key-min-256-bits}
+    secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION:3600000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:86400000}
     issuer: ${JWT_ISSUER:job-monitor-platform}

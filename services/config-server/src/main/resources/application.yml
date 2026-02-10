@@ -19,7 +19,7 @@ spring:
   security:
     user:
       name: ${CONFIG_USER:config}
-      password: ${CONFIG_PASSWORD:config_secret}
+      password: ${CONFIG_PASSWORD}
 
 management:
   endpoints:

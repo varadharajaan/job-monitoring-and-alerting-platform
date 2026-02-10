@@ -1,20 +1,28 @@
 version: '3.9'
 
+# ═══════════════════════════════════════════════════════════════════
+#  Reads secrets from .env file in project root.
+#  Copy .env.example → .env and fill in values before starting.
+#  NEVER hardcode passwords in this file.
+# ═══════════════════════════════════════════════════════════════════
+
 services:
   # ═══════════════ PostgreSQL + TimescaleDB ═══════════════
   postgres:
+    env_file:
+      - ../../.env
     image: timescale/timescaledb:latest-pg16
     container_name: jobmonitor-postgres
     environment:
-      POSTGRES_DB: jobmonitor
-      POSTGRES_USER: jobmonitor
-      POSTGRES_PASSWORD: jobmonitor_secret
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jobmonitor"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,13 +53,15 @@ services:
   redis:
     image: redis:7-alpine
     container_name: jobmonitor-redis
-    command: redis-server --requirepass redis_secret --maxmemory 256mb --maxmemory-policy allkeys-lru
+    env_file:
+      - ../../.env
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redis_secret", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -81,8 +91,10 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: jobmonitor-grafana
+    env_file:
+      - ../../.env
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     ports:
       - "3000:3000"
     volumes:
@@ -93,3 +105,13 @@ volumes:
   redis_data:
   localstack_data:
   grafana_data:
+
+  # ═══════════════ MailHog (Local SMTP testing) ═══════════════
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: jobmonitor-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    profiles:
+      - local

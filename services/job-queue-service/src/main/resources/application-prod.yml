@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
-# AWS Production profile — notification-worker
+# AWS Production profile — job-queue-service
 # ═══════════════════════════════════════════════════════════════
 
 spring:
@@ -8,8 +8,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
-      maximum-pool-size: ${DB_POOL_SIZE:20}
-      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      maximum-pool-size: ${DB_POOL_SIZE:30}
+      minimum-idle: ${DB_POOL_MIN_IDLE:10}
+  jpa:
+    show-sql: false
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP}
     properties:
@@ -18,17 +20,6 @@ spring:
       sasl.jaas.config: >
         software.amazon.msk.auth.iam.IAMLoginModule required;
       sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
-    consumer:
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-  mail:
-    host: ${SMTP_HOST:email-smtp.us-east-1.amazonaws.com}
-    port: ${SMTP_PORT:587}
-    username: ${SES_SMTP_USERNAME}
-    password: ${SES_SMTP_PASSWORD}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
   data:
     redis:
       host: ${REDIS_HOST}
@@ -42,15 +33,12 @@ platform:
     topics:
       default-replicas: ${KAFKA_DEFAULT_REPLICAS:3}
     listener:
-      concurrency: ${KAFKA_LISTENER_CONCURRENCY:4}
-  notification:
-    rate-limit:
-      email: ${RATE_LIMIT_EMAIL:500}
-      sms: ${RATE_LIMIT_SMS:100}
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:6}
   logging:
     dir: /var/log/jobmonitor
     max-file-size: 100MB
     max-history: 14
+    total-size-cap: 5GB
 
 management:
   endpoints:

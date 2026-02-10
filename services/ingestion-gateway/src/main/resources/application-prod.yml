@@ -4,7 +4,7 @@
 
 spring:
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP:b-1.msk-cluster.xxxxx.kafka.us-east-1.amazonaws.com:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP}
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
       sasl.mechanism: ${KAFKA_SASL_MECHANISM:AWS_MSK_IAM}
@@ -13,8 +13,8 @@ spring:
       sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
   data:
     redis:
-      host: ${REDIS_HOST:prod-elasticache.xxxxx.use1.cache.amazonaws.com}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
       ssl:
         enabled: ${REDIS_SSL:true}

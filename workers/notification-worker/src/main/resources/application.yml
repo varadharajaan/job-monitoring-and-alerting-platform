@@ -6,9 +6,9 @@ spring:
   main:
     web-application-type: none
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/jobmonitor}
-    username: ${DB_USERNAME:jobmonitor}
-    password: ${DB_PASSWORD:jobmonitor_secret}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE:10}
       minimum-idle: ${DB_POOL_MIN_IDLE:2}
@@ -22,7 +22,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:redis_secret}
+      password: ${REDIS_PASSWORD}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
     consumer:

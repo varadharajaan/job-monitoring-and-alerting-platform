@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════════════════
+# AWS Production profile — config-server
+# ═══════════════════════════════════════════════════════════════
+
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${CONFIG_GIT_URI}
+          default-label: ${CONFIG_GIT_BRANCH:main}
+          clone-on-start: true
+  security:
+    user:
+      name: ${CONFIG_USER}
+      password: ${CONFIG_PASSWORD}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: WARN
+    org.springframework.cloud.config: INFO

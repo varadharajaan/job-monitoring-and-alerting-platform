@@ -4,14 +4,14 @@
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://prod-rds-cluster.cluster-xxxxx.us-east-1.rds.amazonaws.com:5432/jobmonitor}
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE:20}
       minimum-idle: ${DB_POOL_MIN_IDLE:5}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP:b-1.msk-cluster.xxxxx.kafka.us-east-1.amazonaws.com:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP}
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
       sasl.mechanism: ${KAFKA_SASL_MECHANISM:AWS_MSK_IAM}
@@ -23,8 +23,8 @@ spring:
       enable-auto-commit: false
   data:
     redis:
-      host: ${REDIS_HOST:prod-elasticache.xxxxx.use1.cache.amazonaws.com}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
       ssl:
         enabled: ${REDIS_SSL:true}
