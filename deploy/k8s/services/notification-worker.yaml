@@ -1,0 +1,41 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Notification Worker — Deployment (no Service — headless Kafka consumer)
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-worker
+  namespace: jobmonitor
+  labels:
+    app: notification-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: notification-worker
+  template:
+    metadata:
+      labels:
+        app: notification-worker
+    spec:
+      containers:
+        - name: notification-worker
+          image: jobmonitor/notification-worker:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: jobmonitor-config
+            - secretRef:
+                name: jobmonitor-secrets
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "curl -sf http://localhost:8091/actuator/health || exit 1"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

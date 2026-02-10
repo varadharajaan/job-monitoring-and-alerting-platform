@@ -50,6 +50,19 @@ notification:
   email:
     from: ${EMAIL_FROM:noreply@jobmonitor.local}
     reply-to: ${EMAIL_REPLY_TO:support@jobmonitor.local}
+  sms:
+    enabled: ${SMS_ENABLED:false}
+    sender-id: ${SMS_SENDER_ID:JobMonitor}
+  push:
+    enabled: ${PUSH_ENABLED:false}
+    fcm-server-key: ${FCM_SERVER_KEY:}
+    fcm-url: ${FCM_URL:https://fcm.googleapis.com/fcm/send}
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  endpoint: ${AWS_ENDPOINT:}
+  access-key: ${AWS_ACCESS_KEY:}
+  secret-key: ${AWS_SECRET_KEY:}
 
 eureka:
   client:

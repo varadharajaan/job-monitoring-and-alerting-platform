@@ -1,0 +1,67 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Ingestion Gateway — Deployment + Service
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingestion-gateway
+  namespace: jobmonitor
+  labels:
+    app: ingestion-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ingestion-gateway
+  template:
+    metadata:
+      labels:
+        app: ingestion-gateway
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: ingestion-gateway
+          image: jobmonitor/ingestion-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: jobmonitor-config
+            - secretRef:
+                name: jobmonitor-secrets
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingestion-gateway-service
+  namespace: jobmonitor
+spec:
+  selector:
+    app: ingestion-gateway
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP

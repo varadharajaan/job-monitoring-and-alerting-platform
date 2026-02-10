@@ -1,0 +1,70 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Alerting Service — Deployment + Service
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alerting-service
+  namespace: jobmonitor
+  labels:
+    app: alerting-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: alerting-service
+  template:
+    metadata:
+      labels:
+        app: alerting-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8083"
+    spec:
+      containers:
+        - name: alerting-service
+          image: jobmonitor/alerting-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          envFrom:
+            - configMapRef:
+                name: jobmonitor-config
+            - secretRef:
+                name: jobmonitor-secrets
+          env:
+            - name: ALERTING_PORT
+              value: "8083"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alerting-service
+  namespace: jobmonitor
+spec:
+  selector:
+    app: alerting-service
+  ports:
+    - port: 8083
+      targetPort: 8083
+  type: ClusterIP

@@ -1,0 +1,9 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Kubernetes Namespace — Job Monitoring Platform
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jobmonitor
+  labels:
+    app.kubernetes.io/part-of: job-monitoring-platform

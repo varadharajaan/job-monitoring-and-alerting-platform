@@ -1,0 +1,41 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Job Worker — Deployment (no Service — headless Kafka consumer)
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-worker
+  namespace: jobmonitor
+  labels:
+    app: job-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: job-worker
+  template:
+    metadata:
+      labels:
+        app: job-worker
+    spec:
+      containers:
+        - name: job-worker
+          image: jobmonitor/job-worker:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: jobmonitor-config
+            - secretRef:
+                name: jobmonitor-secrets
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "curl -sf http://localhost:8090/actuator/health || exit 1"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

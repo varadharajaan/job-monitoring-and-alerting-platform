@@ -1,8 +1,68 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'job-monitoring-platform'
+  # ═══════════════ Ingestion Gateway (8080) ═══════════════
+  - job_name: 'ingestion-gateway'
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['host.docker.internal:8080']
+        labels:
+          service: ingestion-gateway
+
+  # ═══════════════ Auth Service (8081) ═══════════════
+  - job_name: 'auth-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8081']
+        labels:
+          service: auth-service
+
+  # ═══════════════ Job Monitoring Service (8082) ═══════════════
+  - job_name: 'job-monitoring-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8082']
+        labels:
+          service: job-monitoring-service
+
+  # ═══════════════ Alerting Service (8083) ═══════════════
+  - job_name: 'alerting-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8083']
+        labels:
+          service: alerting-service
+
+  # ═══════════════ Notification Service (8084) ═══════════════
+  - job_name: 'notification-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8084']
+        labels:
+          service: notification-service
+
+  # ═══════════════ Job Queue Service (8085) ═══════════════
+  - job_name: 'job-queue-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8085']
+        labels:
+          service: job-queue-service
+
+  # ═══════════════ Eureka Server (8761) ═══════════════
+  - job_name: 'eureka-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8761']
+        labels:
+          service: eureka-server
+
+  # ═══════════════ Config Server (8888) ═══════════════
+  - job_name: 'config-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8888']
+        labels:
+          service: config-server

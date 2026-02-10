@@ -28,6 +28,9 @@ dependencies {
     // ── AWS S3 ──
     api 'software.amazon.awssdk:s3'
 
+    // ── Azure Blob Storage ──
+    api 'com.azure:azure-storage-blob:12.25.4'
+
     // ── JWT (JJWT) ──
     api 'io.jsonwebtoken:jjwt-api:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'

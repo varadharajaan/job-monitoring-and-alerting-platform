@@ -1,0 +1,35 @@
+# ═══════════════════════════════════════════════════════════════════
+#  ConfigMap — Shared environment configuration
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jobmonitor-config
+  namespace: jobmonitor
+  labels:
+    app.kubernetes.io/part-of: job-monitoring-platform
+data:
+  # Database
+  DB_URL: "jdbc:postgresql://postgres-service:5432/jobmonitor"
+  DB_POOL_SIZE: "10"
+  DB_POOL_MIN_IDLE: "2"
+  # Kafka
+  KAFKA_BOOTSTRAP: "kafka-service:9092"
+  # Redis
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  # Eureka
+  EUREKA_ENABLED: "true"
+  EUREKA_URL: "http://eureka:eureka@eureka-service:8761/eureka/"
+  # AWS (LocalStack for dev)
+  AWS_REGION: "us-east-1"
+  # SMTP (MailHog for dev)
+  SMTP_HOST: "mailhog-service"
+  SMTP_PORT: "1025"
+  SMTP_AUTH: "false"
+  SMTP_TLS: "false"
+  # Notification defaults
+  SMS_ENABLED: "false"
+  PUSH_ENABLED: "false"
+  # Spring profiles
+  SPRING_PROFILES_ACTIVE: "k8s"
