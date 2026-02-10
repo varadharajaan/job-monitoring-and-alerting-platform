@@ -81,7 +81,7 @@ class KafkaEventSampleTest {
             var json = objectMapper.writeValueAsString(event);
 
             assertThat(json)
-                    .contains("\"type\":\"JOB\"")
+                    .contains("\"eventType\":\"JOB\"")
                     .contains("\"action\":\"COMPLETED\"")
                     .contains("\"jobName\":\"nightly-etl-pipeline\"")
                     .contains("\"exitCode\":0")
@@ -95,7 +95,7 @@ class KafkaEventSampleTest {
             var json = objectMapper.writeValueAsString(event);
 
             assertThat(json)
-                    .contains("\"type\":\"ALERT\"")
+                    .contains("\"eventType\":\"ALERT\"")
                     .contains("\"action\":\"TRIGGERED\"")
                     .contains("\"severity\":\"HIGH\"")
                     .contains("\"alertName\":\"sla-breach-detection\"")
@@ -110,7 +110,7 @@ class KafkaEventSampleTest {
             var json = objectMapper.writeValueAsString(event);
 
             assertThat(json)
-                    .contains("\"type\":\"NOTIFICATION\"")
+                    .contains("\"eventType\":\"NOTIFICATION\"")
                     .contains("\"action\":\"SENT\"")
                     .contains("\"channel\":\"EMAIL\"")
                     .contains("\"recipient\":\"ops-team@example.com\"")
@@ -195,7 +195,7 @@ class KafkaEventSampleTest {
                     .map(toJson)
                     .forEach(json -> assertThat(json)
                             .contains("\"eventId\"")
-                            .contains("\"type\"")
+                            .contains("\"eventType\"")
                             .contains("\"timestamp\"")
                             .contains("\"tenantId\""));
         }
@@ -207,7 +207,7 @@ class KafkaEventSampleTest {
             assertThat(actions).extracting(Enum::name)
                     .containsExactlyInAnyOrder(
                             "REGISTERED", "STARTED", "COMPLETED", "FAILED",
-                            "SLA_VIOLATED", "RETRYING", "DEREGISTERED");
+                            "SLA_VIOLATED", "RETRYING", "HEARTBEAT_MISSED");
         }
 
         @Test

@@ -122,15 +122,15 @@ public class NotificationService {
         log.info("Creating template '{}' channel={} for tenant={}", request.getName(),
                 request.getChannel(), tenantId);
 
-        var template = notificationMapper.toTemplateEntity(request);
-        template.setTenantId(tenantId);
-
-        // Duplicate check via Optional
+        // Duplicate check first — avoid unnecessary entity creation
         templateRepository.findByTenantIdAndNameAndChannel(tenantId, request.getName(), request.getChannel())
                 .ifPresent(existing -> {
                     throw new DuplicateResourceException("NotificationTemplate",
                             request.getName() + "/" + request.getChannel());
                 });
+
+        var template = notificationMapper.toTemplateEntity(request);
+        template.setTenantId(tenantId);
 
         var saved = templateRepository.save(template);
         return toTemplateResponse.apply(saved);

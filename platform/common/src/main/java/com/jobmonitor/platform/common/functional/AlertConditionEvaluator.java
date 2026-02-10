@@ -13,9 +13,9 @@ public interface AlertConditionEvaluator {
     /**
      * Evaluate whether the alert condition is met.
      *
-     * @param conditionJson the condition configuration as a map
+     * @param conditionJson the condition configuration as a JSON string
      * @param context       execution context (metric values, counts, etc.)
      * @return true if the alert should fire
      */
-    boolean evaluate(Map<String, Object> conditionJson, Map<String, Object> context);
+    boolean evaluate(String conditionJson, Map<String, Object> context);
 }

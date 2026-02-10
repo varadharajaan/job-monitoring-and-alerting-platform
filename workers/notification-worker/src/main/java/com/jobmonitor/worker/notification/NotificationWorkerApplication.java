@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
  * dispatches via the appropriate channel (Email, SMS, Slack, Webhook),
  * and reports delivery status back.
  */
-@SpringBootApplication(scanBasePackages = {"com.jobmonitor.worker.notification", "com.jobmonitor.platform.common"})
+@SpringBootApplication(scanBasePackages = {"com.jobmonitor.worker.notification", "com.jobmonitor.notifworker", "com.jobmonitor.platform.common"})
 @ConfigurationPropertiesScan(basePackages = "com.jobmonitor.platform.common.config")
 @EnableJpaAuditing
 public class NotificationWorkerApplication {

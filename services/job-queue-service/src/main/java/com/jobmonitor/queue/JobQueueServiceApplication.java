@@ -17,7 +17,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
  *   <li>Provide queue management APIs and dashboard data</li>
  * </ul>
  */
-@SpringBootApplication(scanBasePackages = {"com.jobmonitor.queue", "com.jobmonitor.platform.common"})
+@SpringBootApplication(scanBasePackages = {"com.jobmonitor.queue", "com.jobmonitor.jobqueue", "com.jobmonitor.platform.common"})
 @ConfigurationPropertiesScan(basePackages = "com.jobmonitor.platform.common.config")
 @EnableJpaAuditing
 @EnableCaching

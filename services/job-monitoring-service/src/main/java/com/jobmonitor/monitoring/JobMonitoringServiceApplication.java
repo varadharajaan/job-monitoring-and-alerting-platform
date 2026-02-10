@@ -4,7 +4,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
  * Job Monitoring Service — tracks scheduled job execution lifecycle.
@@ -20,7 +19,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
  */
 @SpringBootApplication(scanBasePackages = {"com.jobmonitor.monitoring", "com.jobmonitor.platform.common"})
 @ConfigurationPropertiesScan(basePackages = "com.jobmonitor.platform.common.config")
-@EnableJpaAuditing
 @EnableCaching
 public class JobMonitoringServiceApplication {
 

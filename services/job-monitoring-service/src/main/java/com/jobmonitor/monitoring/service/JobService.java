@@ -34,7 +34,6 @@ import java.util.function.UnaryOperator;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class JobService {
 
@@ -46,24 +45,36 @@ public class JobService {
 
     // ──────────── Functional Interfaces (composition patterns) ────────────
 
-    /** Validates that a job name is unique within a tenant — throws on duplicate. */
-    private final EntityValidator<Job> uniqueNameValidator = job ->
-            jobRepository.findByTenantIdAndName(job.getTenantId(), job.getName())
-                    .filter(existing -> !existing.getId().equals(job.getId()))
-                    .ifPresent(existing -> {
-                        throw new DuplicateResourceException("Job", job.getName());
-                    });
+    private final EntityValidator<Job> uniqueNameValidator;
+    private final Function<Job, JobResponse> toResponse;
+    private final Function<JobExecution, ExecutionResponse> toExecutionResponse;
 
-    /** Transforms a Job entity into a response DTO — used as Function reference. */
-    private final Function<Job, JobResponse> toResponse = jobMapper::toResponse;
+    public JobService(JobRepository jobRepository,
+                      JobExecutionRepository executionRepository,
+                      JobMapper jobMapper,
+                      PlatformProperties properties,
+                      EventPublisher<PlatformEvent> eventPublisher) {
+        this.jobRepository = jobRepository;
+        this.executionRepository = executionRepository;
+        this.jobMapper = jobMapper;
+        this.properties = properties;
+        this.eventPublisher = eventPublisher;
 
-    /** Transforms a JobExecution entity into a response DTO. */
-    private final Function<JobExecution, ExecutionResponse> toExecutionResponse =
-            jobMapper::toExecutionResponse;
+        this.uniqueNameValidator = job ->
+                jobRepository.findByTenantIdAndName(job.getTenantId(), job.getName())
+                        .filter(existing -> !existing.getId().equals(job.getId()))
+                        .ifPresent(existing -> {
+                            throw new DuplicateResourceException("Job", job.getName());
+                        });
 
-    /** Resolves the Kafka topic name from config — no hardcoded string. */
-    private final Supplier<String> jobEventsTopic = () ->
-            properties.getKafka().getTopics().getJobEvents();
+        this.toResponse = job -> jobMapper.toResponse(job);
+        this.toExecutionResponse = execution -> jobMapper.toExecutionResponse(execution);
+    }
+
+    /** Resolves the Kafka topic name from config */
+    private String getJobEventsTopic() {
+        return properties.getKafka().getTopics().getJobEvents();
+    }
 
     // ──────────── Job CRUD ────────────
 
@@ -222,6 +233,6 @@ public class JobService {
 
         customizer.accept(builder);
 
-        eventPublisher.publish(jobEventsTopic.get(), job.getTenantId(), builder.build());
+        eventPublisher.publish(getJobEventsTopic(), job.getTenantId(), builder.build());
     }
 }

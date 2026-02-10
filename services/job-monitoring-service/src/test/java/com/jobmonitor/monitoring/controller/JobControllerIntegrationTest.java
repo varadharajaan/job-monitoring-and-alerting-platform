@@ -7,10 +7,15 @@ import com.jobmonitor.monitoring.service.JobService;
 import com.jobmonitor.platform.common.dto.PageResponse;
 import com.jobmonitor.platform.common.exception.DuplicateResourceException;
 import com.jobmonitor.platform.common.exception.ResourceNotFoundException;
+import com.jobmonitor.platform.common.security.JwtAuthenticationFilter;
+import com.jobmonitor.platform.common.security.JwtTokenProvider;
+import com.jobmonitor.platform.common.security.SecurityConfig;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -33,7 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration test for {@link JobController} — Spring WebMvcTest slice.
  * Uses MockBean for service layer, validates HTTP contract.
  */
-@WebMvcTest(JobController.class)
+@WebMvcTest(controllers = JobController.class,
+        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
+                classes = {SecurityConfig.class, JwtAuthenticationFilter.class, JwtTokenProvider.class}))
 @DisplayName("JobController Integration Tests")
 class JobControllerIntegrationTest {
 

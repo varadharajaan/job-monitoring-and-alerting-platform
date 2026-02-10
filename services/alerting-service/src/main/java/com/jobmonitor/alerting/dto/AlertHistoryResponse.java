@@ -15,7 +15,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class AlertHistoryResponse {
-
     private UUID id;
     private UUID alertRuleId;
     private String alertRuleName;

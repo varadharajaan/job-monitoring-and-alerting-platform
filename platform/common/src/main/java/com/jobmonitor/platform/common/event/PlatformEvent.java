@@ -11,7 +11,7 @@ import java.util.UUID;
  * Base event for all Kafka messages in the platform.
  * Uses Jackson polymorphic deserialization so consumers can handle typed events.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "eventType")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "eventType", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = JobEvent.class,          name = "JOB"),
     @JsonSubTypes.Type(value = AlertEvent.class,        name = "ALERT"),

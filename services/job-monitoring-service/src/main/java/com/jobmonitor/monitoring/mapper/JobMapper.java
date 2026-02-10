@@ -16,7 +16,8 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
  * Spring component model — injected via constructor.
  */
 @Mapper(componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        builder = @org.mapstruct.Builder(disableBuilder = true))
 public interface JobMapper {
 
     JobResponse toResponse(Job job);
