@@ -2,7 +2,9 @@ package com.jobmonitor.jobqueue.controller;
 
 import com.jobmonitor.jobqueue.dto.EnqueueRequest;
 import com.jobmonitor.jobqueue.dto.QueueItemResponse;
+import com.jobmonitor.jobqueue.dto.QueueStatsResponse;
 import com.jobmonitor.jobqueue.service.JobQueueService;
+import com.jobmonitor.jobqueue.service.QueueStatsService;
 import com.jobmonitor.platform.common.dto.ApiResponse;
 import com.jobmonitor.platform.common.dto.PageResponse;
 import jakarta.validation.Valid;
@@ -15,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 /**
- * Job queue controller — enqueue, claim, complete, fail, cancel.
+ * Job queue controller — enqueue, claim, complete, fail, cancel, stats.
  */
 @RestController
 @RequestMapping("/api/v1/queue")
@@ -23,6 +25,7 @@ import java.util.UUID;
 public class JobQueueController {
 
     private final JobQueueService queueService;
+    private final QueueStatsService statsService;
 
     @PostMapping("/enqueue")
     public ResponseEntity<ApiResponse<QueueItemResponse>> enqueue(
@@ -75,5 +78,11 @@ public class JobQueueController {
             @RequestParam(defaultValue = "20") int size) {
         var result = queueService.listByStatus(tenantId, status, PageRequest.of(page, size));
         return ResponseEntity.ok(PageResponse.of(result));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<QueueStatsResponse>> getStats(
+            @RequestHeader("X-Tenant-Id") String tenantId) {
+        return ResponseEntity.ok(ApiResponse.ok(statsService.getStats(tenantId)));
     }
 }
