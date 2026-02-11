@@ -12,6 +12,12 @@ target/
 *.war
 *.ear
 
+# ── Temp build/test output files ──
+*-output.txt
+*-test.txt
+build-*.txt
+test-output.txt
+
 # ── Gradle ──
 .gradle/
 !gradle/wrapper/gradle-wrapper.jar
