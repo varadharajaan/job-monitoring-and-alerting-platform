@@ -25,7 +25,6 @@ ext {
 allprojects {
     group = 'com.jobmonitor'
     version = '1.0.0-SNAPSHOT'
-    layout.buildDirectory = file("C:/tmp/jmap-build/${project.name}/build")
 }
 
 subprojects {

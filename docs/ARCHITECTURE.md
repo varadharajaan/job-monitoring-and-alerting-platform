@@ -42,8 +42,8 @@ monorepo:
 | Background Job Queue  | Active     | Priority queue, retries, dead-letter, stats    |
 | Service Discovery     | Active     | Spring Cloud Netflix Eureka                    |
 | Azure Cloud Ready     | Active     | Dual-cloud: AWS prod + Azure profiles          |
-| Log Aggregation       | Future     | JSONL -> S3 -> Athena (infrastructure ready)   |
-| DB Query Analyzer     | Future     | Slow query detection, index suggestions        |
+| Log Ingestion         | Active     | Elasticsearch log search, alert patterns, retention |
+| DB Performance        | Active     | Slow query detection, index suggestions, EXPLAIN |
 
 ---
 
@@ -200,6 +200,8 @@ settings.gradle
 | CORE | alerting-service                   |  8083  | alerting          |
 | CORE | notification-service               |  8084  | notification      |
 | CORE | job-queue-service                  |  8085  | job-queue         |
+| CORE | log-ingestion-service              |  8086  | log-ingestion     |
+| CORE | db-performance-service             |  8087  | --                |
 | WORK | job-worker (headless)              |  --    | job-worker        |
 | WORK | notification-worker (headless)     |  --    | notification-wkr  |
 +------+------------------------------------+--------+-------------------+
@@ -210,6 +212,7 @@ Infrastructure containers:
 | CACHE| Redis 7                            |  6379  |
 | MSG  | Apache Kafka 3.7.0 (KRaft)         |  9092  |
 | CLOUD| LocalStack (S3)                    |  4566  |
+| SRCH | Elasticsearch 8.13.0               |  9200  |
 | MON  | Prometheus                         |  9090  |
 | MON  | Grafana                            |  3000  |
 +------+------------------------------------+--------+

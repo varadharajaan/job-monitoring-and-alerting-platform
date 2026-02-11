@@ -170,10 +170,17 @@
 
 ---
 
-## Future Stages
+## Phase 10: Advanced Services
 
-### ISSUE-031: log-ingestion-service (Stage 2) — ⏸️ FUTURE
-### ISSUE-032: db-performance-service (Stage 3) — ⏸️ FUTURE
+### ISSUE-031: Log Ingestion Service
+- **Status**: ✅ COMPLETED
+- **Priority**: P1
+- **Completed**: Full Elasticsearch-backed log ingestion service (port 8086) — `LogEntry` model with daily rolling ES indices, `LogAlertPattern` regex-based alerting, `LogRetentionPolicy` per-tenant retention, Kafka batch consumer (`log-events` topic), full-text search API, bulk ingest, retention scheduler (daily cron), Flyway migrations, Dockerfile, K8s manifests, HPA, Prometheus scrape target, unit tests
+
+### ISSUE-032: DB Performance Service
+- **Status**: ✅ COMPLETED
+- **Priority**: P1
+- **Completed**: Full database performance monitoring service (port 8087) — `MonitoredDatabase` multi-DB registration, `SlowQuery` detection via `pg_stat_statements` with SHA-256 fingerprinting, `IndexSuggestion` rule-based engine (WHERE/JOIN column extraction, DDL generation), EXPLAIN ANALYZE with cost estimation, 7 anti-pattern rewrite suggestions (SELECT *, NOT IN, leading wildcard, OR, missing LIMIT, DISTINCT, HAVING), scheduled slow query collection (every 5 min), Flyway migrations, Dockerfile, K8s manifests, HPA, Prometheus scrape target, unit tests
 
 ---
 
@@ -191,6 +198,6 @@
 | 7: Gateway & Auth | 025-026 | ✅ Completed |
 | 8: Deployment | 027-028 | ✅ Completed |
 | 9: Integration | 029-030 | ✅ Completed |
-| Future | 031-032 | ⏸️ Future |
+| 10: Advanced Services | 031-032 | ✅ Completed |
 
-**All 30 active issues COMPLETED.** Platform is production-ready for Stage 1 workloads.
+**All 32 issues COMPLETED.** Platform is fully production-ready with all planned services implemented.

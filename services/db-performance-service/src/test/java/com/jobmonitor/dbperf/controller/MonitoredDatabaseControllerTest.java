@@ -1,12 +1,18 @@
 package com.jobmonitor.dbperf.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jobmonitor.dbperf.config.SecurityConfig;
 import com.jobmonitor.dbperf.model.MonitoredDatabase;
 import com.jobmonitor.dbperf.service.MonitoredDatabaseService;
+import com.jobmonitor.platform.common.security.JwtAuthenticationFilter;
+import com.jobmonitor.platform.common.security.JwtTokenProvider;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -19,7 +25,11 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(MonitoredDatabaseController.class)
+@WebMvcTest(controllers = MonitoredDatabaseController.class,
+        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
+                classes = {com.jobmonitor.platform.common.security.SecurityConfig.class,
+                        JwtAuthenticationFilter.class, JwtTokenProvider.class}))
+@Import(SecurityConfig.class)
 @DisplayName("MonitoredDatabaseController Tests")
 class MonitoredDatabaseControllerTest {
 

@@ -77,6 +77,8 @@
 | Alerting Service | 8083 | Alert rule engine, Kafka consumer |
 | Notification Service | 8084 | Multi-channel notification dispatch |
 | Job Queue Service | 8085 | Priority queue, distributed claiming |
+| Log Ingestion Service | 8086 | Elasticsearch-backed log search, alert patterns |
+| DB Performance Service | 8087 | Slow query detection, index suggestions, EXPLAIN |
 | Eureka Server | 8761 | Service discovery |
 | Config Server | 8888 | Centralized configuration |
 | Prometheus | 9090 | Metrics collection |
@@ -223,13 +225,19 @@ Start services in this order:
 # Terminal 7 — Job Queue Service
 ./gradlew :services:job-queue-service:bootRun
 
-# Terminal 8 — Ingestion Gateway
+# Terminal 8 — Log Ingestion Service (requires Elasticsearch)
+./gradlew :services:log-ingestion-service:bootRun
+
+# Terminal 9 — DB Performance Service
+./gradlew :services:db-performance-service:bootRun
+
+# Terminal 10 — Ingestion Gateway
 ./gradlew :services:ingestion-gateway:bootRun
 
-# Terminal 9 — Job Worker
+# Terminal 11 — Job Worker
 ./gradlew :workers:job-worker:bootRun
 
-# Terminal 10 — Notification Worker
+# Terminal 12 — Notification Worker
 ./gradlew :workers:notification-worker:bootRun
 ```
 
@@ -243,6 +251,8 @@ curl http://localhost:8082/actuator/health   # Job Monitor
 curl http://localhost:8083/actuator/health   # Alerting
 curl http://localhost:8084/actuator/health   # Notification
 curl http://localhost:8085/actuator/health   # Job Queue
+curl http://localhost:8086/actuator/health   # Log Ingestion
+curl http://localhost:8087/actuator/health   # DB Performance
 curl http://localhost:8761/actuator/health   # Eureka
 curl http://localhost:8888/actuator/health   # Config
 ```
@@ -337,6 +347,8 @@ curl http://localhost:8085/api/v1/queue/stats \
 ./gradlew :services:auth-service:test
 ./gradlew :services:job-queue-service:test
 ./gradlew :services:ingestion-gateway:test
+./gradlew :services:log-ingestion-service:test
+./gradlew :services:db-performance-service:test
 ./gradlew :workers:job-worker:test
 ./gradlew :workers:notification-worker:test
 ```
