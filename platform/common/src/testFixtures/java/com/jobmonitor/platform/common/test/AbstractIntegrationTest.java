@@ -1,6 +1,6 @@
 package com.jobmonitor.platform.common.test;
 
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -21,6 +21,8 @@ import org.testcontainers.utility.DockerImageName;
  * <p>Containers are started once per test class hierarchy (shared via static fields)
  * and their connection properties are injected dynamically via {@link DynamicPropertySource}.</p>
  *
+ * <p><strong>Requires Docker</strong> — tests are automatically skipped when Docker is not available.</p>
+ *
  * <p>Usage: extend this class in any {@code @SpringBootTest} integration test.</p>
  *
  * <pre>{@code
@@ -35,39 +37,64 @@ import org.testcontainers.utility.DockerImageName;
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
+    protected static volatile boolean containersStarted = false;
+
     // ── TimescaleDB (PostgreSQL 16) ─────────────────────────────
-    protected static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>(DockerImageName.parse("timescale/timescaledb:latest-pg16")
-                    .asCompatibleSubstituteFor("postgres"))
-                    .withDatabaseName("jobmonitor_test")
-                    .withUsername("test")
-                    .withPassword("test")
-                    .withReuse(true);
+    protected static PostgreSQLContainer<?> POSTGRES;
 
     // ── Redis 7 ─────────────────────────────────────────────────
-    @SuppressWarnings("resource")
-    protected static final GenericContainer<?> REDIS =
-            new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
-                    .withExposedPorts(6379)
-                    .withReuse(true);
+    protected static GenericContainer<?> REDIS;
 
     // ── Kafka (KRaft mode) ──────────────────────────────────────
-    protected static final KafkaContainer KAFKA =
-            new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
-                    .withKraft()
-                    .withReuse(true);
+    protected static KafkaContainer KAFKA;
 
-    static {
+    @BeforeAll
+    static void startContainers() {
+        if (containersStarted) {
+            return;
+        }
+
+        // Check Docker availability
+        boolean dockerAvailable;
+        try {
+            dockerAvailable = org.testcontainers.DockerClientFactory.instance().isDockerAvailable();
+        } catch (Throwable t) {
+            dockerAvailable = false;
+        }
+        org.junit.jupiter.api.Assumptions.assumeTrue(dockerAvailable,
+                "Docker is not available — skipping Testcontainers integration tests");
+
+        POSTGRES = new PostgreSQLContainer<>(DockerImageName.parse("timescale/timescaledb:latest-pg16")
+                .asCompatibleSubstituteFor("postgres"))
+                .withDatabaseName("jobmonitor_test")
+                .withUsername("test")
+                .withPassword("test")
+                .withReuse(true);
         POSTGRES.start();
+
+        REDIS = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+                .withExposedPorts(6379)
+                .withReuse(true);
         REDIS.start();
+
+        KAFKA = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
+                .withKraft()
+                .withReuse(true);
         KAFKA.start();
+
+        containersStarted = true;
     }
 
     /**
      * Injects dynamic container connection properties into Spring context.
+     * When Docker is unavailable, containers are null and tests are skipped via {@code @BeforeAll}.
      */
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
+        if (!containersStarted) {
+            return; // Tests will be skipped by @BeforeAll assumption
+        }
+
         // ── DataSource ──
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);

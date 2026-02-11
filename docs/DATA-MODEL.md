@@ -39,19 +39,19 @@
 +--------v----------+          +---------------------+
 |       jobs        |          |    alert_rules      |
 +-------------------+          +---------------------+
-| PK id        UUID |<---+    | PK id          UUID |
-| FK tenant_id UUID |    |    | FK tenant_id   UUID |----> tenants
-|    name   VARCHAR |    |    | FK job_id      UUID |----> jobs (nullable)
-|    cron   VARCHAR |    |    |    name      VARCHAR |
-|    schedule_type  |    |    |    rule_type VARCHAR |
-|    sla_seconds INT|    |    |    condition   JSONB |
-|    grace_period   |    |    |    severity  VARCHAR |
-|    timeout_seconds|    |    |    channels    JSONB |
-|    max_retries INT|    |    |    cooldown_sec  INT |
-|    tags      JSONB|    |    |    enabled   BOOLEAN |
-|    metadata  JSONB|    |    |    version    BIGINT |
-|    status VARCHAR |    |    |    created_at     TZ |
-|    version BIGINT |    |    |    updated_at     TZ |
+| PK id        UUID |<---+     | PK id          UUID |
+| FK tenant_id UUID |    |     | FK tenant_id   UUID |----> tenants
+|    name   VARCHAR |    |     | FK job_id      UUID |----> jobs (nullable)
+|    cron   VARCHAR |    |     |   name      VARCHAR |
+|    schedule_type  |    |     |   rule_type VARCHAR |
+|    sla_seconds INT|    |     |   condition   JSONB |
+|    grace_period   |    |     |   severity  VARCHAR |
+|    timeout_seconds|    |     |   channels    JSONB |
+|    max_retries INT|    |     |   cooldown_sec  INT |
+|    tags      JSONB|    |     |   enabled   BOOLEAN |
+|    metadata  JSONB|    |     |   version    BIGINT |
+|    status VARCHAR |    |     |   created_at     TZ |
+|    version BIGINT |    |     |   updated_at     TZ |
 |    created_at  TZ |    |    +---------+-----------+
 |    updated_at  TZ |    |              |
 +--------+----------+    |              | 1:N
@@ -63,13 +63,13 @@
 +-------------------+    |    | FK alert_rule  UUID |
 | PK id        UUID |    |    | FK tenant_id   UUID |----> tenants
 | PK started_at  TZ |    |    | FK job_id      UUID |----> jobs (nullable)
-| FK job_id    UUID |    |    |    severity  VARCHAR |
-| FK tenant_id UUID |    |    |    status    VARCHAR |
-|    status VARCHAR |    |    |    message      TEXT |
-|    completed_at TZ|    |    |    context     JSONB |
-|    duration_ms    |    |    |    acknowledged_by   |
-|    exit_code  INT |    |    |    acknowledged_at TZ|
-|    output    TEXT |    |    |    resolved_at     TZ|
+| FK job_id    UUID |    |    |   severity  VARCHAR |
+| FK tenant_id UUID |    |    |   status    VARCHAR |
+|    status VARCHAR |    |    |   message      TEXT |
+|    completed_at TZ|    |    |   context     JSONB |
+|    duration_ms    |    |    |   acknowledged_by   |
+|    exit_code  INT |    |    |   acknowledged_at TZ|
+|    output    TEXT |    |    |   resolved_at     TZ|
 |    error_msg TEXT |    |    | PK triggered_at   TZ|
 |    attempt_no INT |    |    +---------------------+
 |    metadata JSONB |    |     (* = hypertable)
@@ -80,11 +80,11 @@
 +-------------------+    |    +---------------------+
 | notif_templates   |    |    |   notifications *   |
 +-------------------+    |    +---------------------+
-| PK id        UUID |    |    | PK id          UUID |
-| FK tenant_id UUID |    |    | FK tenant_id   UUID |----> tenants
-|    name   VARCHAR |    |    | FK template_id UUID |----> notif_templates
-|    channel VARCHAR |    |    |    channel   VARCHAR |
-|    subject VARCHAR |    |    |    recipient VARCHAR |
+| PK id        UUID |    |    | PK id          UUID  |
+| FK tenant_id UUID |    |    | FK tenant_id   UUID  |----> tenants
+|   name   VARCHAR  |    |    | FK template_id UUID  |----> notif_templates
+|   channel VARCHAR |    |    |    channel   VARCHAR |
+|   subject VARCHAR |    |    |    recipient VARCHAR |
 |    body      TEXT |    |    |    subject   VARCHAR |
 |    variables JSONB|    |    |    body         TEXT |
 |    version BIGINT |    |    |    status    VARCHAR |

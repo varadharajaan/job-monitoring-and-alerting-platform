@@ -1,0 +1,38 @@
+spring:
+  config:
+    import: ""
+  cloud:
+    config:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+
+eureka:
+  client:
+    enabled: false
+
+platform:
+  kafka:
+    topics:
+      job-events: job-monitor.job-events
+      alert-events: job-monitor.alert-events
+      notification-events: job-monitor.notification-events
+      queue-events: job-monitor.queue-events
+      dead-letter: job-monitor.dead-letter
+    listener:
+      concurrency: 1
+    error-handling:
+      backoff-interval-ms: 100
+      max-retries: 1
+
+logging:
+  level:
+    com.jobmonitor: DEBUG
