@@ -1,0 +1,75 @@
+# ═══════════════════════════════════════════════════════════════
+# Azure profile — DB Performance Service
+# Activated via: SPRING_PROFILES_ACTIVE=azure
+# Uses: Azure Flexible Server, Event Hubs (Kafka), Cache for Redis
+# ═══════════════════════════════════════════════════════════════
+
+spring:
+  datasource:
+    url: ${AZURE_DB_URL}
+    username: ${AZURE_DB_USERNAME}
+    password: ${AZURE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:15}
+      minimum-idle: ${DB_POOL_MIN_IDLE:3}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    show-sql: false
+  kafka:
+    bootstrap-servers: ${AZURE_EVENTHUBS_BOOTSTRAP}
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="$$ConnectionString"
+        password="${AZURE_EVENTHUBS_CONNECTION_STRING}";
+    producer:
+      acks: all
+      retries: 3
+  data:
+    redis:
+      host: ${AZURE_REDIS_HOST}
+      port: ${AZURE_REDIS_PORT:6380}
+      password: ${AZURE_REDIS_PASSWORD}
+      ssl:
+        enabled: true
+      timeout: 5000ms
+  flyway:
+    enabled: true
+
+app:
+  scheduler:
+    slow-query-interval-ms: ${SLOW_QUERY_INTERVAL_MS:300000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.jobmonitor: INFO
+
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}

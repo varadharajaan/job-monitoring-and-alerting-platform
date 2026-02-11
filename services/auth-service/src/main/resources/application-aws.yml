@@ -1,0 +1,57 @@
+# ═══════════════════════════════════════════════════════════════
+# AWS profile — Auth Service
+# Activated via: SPRING_PROFILES_ACTIVE=aws
+# Uses: RDS PostgreSQL, ElastiCache Redis, MSK Kafka
+# ═══════════════════════════════════════════════════════════════
+
+spring:
+  datasource:
+    url: ${AWS_RDS_URL}
+    username: ${AWS_RDS_USERNAME}
+    password: ${AWS_RDS_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:15}
+      minimum-idle: ${DB_POOL_MIN_IDLE:3}
+      connection-timeout: 30000
+  jpa:
+    show-sql: false
+  kafka:
+    bootstrap-servers: ${AWS_MSK_BOOTSTRAP}
+    properties:
+      security.protocol: SSL
+      ssl.truststore.location: /etc/kafka/ssl/truststore.jks
+      ssl.truststore.password: ${AWS_MSK_TRUSTSTORE_PASSWORD}
+  data:
+    redis:
+      host: ${AWS_ELASTICACHE_HOST}
+      port: ${AWS_ELASTICACHE_PORT:6379}
+      password: ${AWS_ELASTICACHE_PASSWORD:}
+      ssl:
+        enabled: ${AWS_ELASTICACHE_SSL:true}
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.jobmonitor: INFO
+
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}

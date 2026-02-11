@@ -1,0 +1,30 @@
+# ═══════════════════════════════════════════════════════════════
+# AWS profile — Config Server
+# Activated via: SPRING_PROFILES_ACTIVE=aws
+# Uses: S3 backend for config or Git via CodeCommit
+# ═══════════════════════════════════════════════════════════════
+
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${AWS_CODECOMMIT_URI:}
+          default-label: main
+          clone-on-start: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: WARN
+    org.springframework.cloud.config: INFO

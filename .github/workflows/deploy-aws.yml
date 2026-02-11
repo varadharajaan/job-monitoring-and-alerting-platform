@@ -1,0 +1,172 @@
+# ============================================================================
+# Deploy to AWS — Build images → Push to ECR → Deploy to EKS
+# ============================================================================
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'deploy/azure/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, prod]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: jobmonitor-prod-cluster
+  JAVA_VERSION: '17'
+
+jobs:
+  build-and-push:
+    name: Build & Push to ECR
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    strategy:
+      matrix:
+        service:
+          - eureka-server
+          - config-server
+          - auth-service
+          - ingestion-gateway
+          - job-monitoring-service
+          - alerting-service
+          - notification-service
+          - job-queue-service
+          - log-ingestion-service
+          - db-performance-service
+          - job-worker
+          - notification-worker
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Determine module path
+        id: module
+        run: |
+          if [[ "${{ matrix.service }}" == *-worker ]]; then
+            echo "path=workers/${{ matrix.service }}" >> $GITHUB_OUTPUT
+          else
+            echo "path=services/${{ matrix.service }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build JAR
+        run: ./gradlew :${{ matrix.service }}:bootJar --no-daemon
+
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/${{ matrix.service }}:$IMAGE_TAG \
+            -t $ECR_REGISTRY/${{ matrix.service }}:latest \
+            -f ${{ steps.module.outputs.path }}/Dockerfile \
+            ${{ steps.module.outputs.path }}
+
+          docker push $ECR_REGISTRY/${{ matrix.service }}:$IMAGE_TAG
+          docker push $ECR_REGISTRY/${{ matrix.service }}:latest
+
+  deploy:
+    name: Deploy to EKS
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name ${{ env.EKS_CLUSTER_NAME }} \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Deploy K8s manifests
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Apply namespace, configmap, secrets
+          kubectl apply -f deploy/k8s/namespace.yaml
+          kubectl apply -f deploy/k8s/configmap.yaml
+
+          # Apply infrastructure
+          kubectl apply -f deploy/k8s/infra/
+
+          # Deploy services with updated image
+          for svc in deploy/k8s/services/*.yaml; do
+            sed -i "s|image:.*|image: ${ECR_REGISTRY}/$(basename $svc .yaml):${IMAGE_TAG}|g" "$svc"
+            kubectl apply -f "$svc"
+          done
+
+          # Apply monitoring & HPA
+          kubectl apply -f deploy/k8s/monitoring/
+          kubectl apply -f deploy/k8s/hpa.yaml
+          kubectl apply -f deploy/k8s/ingress.yaml
+
+      - name: Verify rollout
+        run: |
+          SERVICES=(
+            eureka-server config-server auth-service ingestion-gateway
+            job-monitoring-service alerting-service notification-service
+            job-queue-service log-ingestion-service db-performance-service
+            job-worker notification-worker
+          )
+          for svc in "${SERVICES[@]}"; do
+            echo "Waiting for $svc rollout..."
+            kubectl rollout status deployment/$svc -n jobmonitor --timeout=300s || true
+          done
+
+      - name: Smoke test
+        run: |
+          GATEWAY_URL=$(kubectl get svc ingestion-gateway -n jobmonitor -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Gateway URL: $GATEWAY_URL"
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$GATEWAY_URL:8080/actuator/health" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS, retrying in 15s..."
+            sleep 15
+          done
+          echo "Smoke test failed"
+          exit 1

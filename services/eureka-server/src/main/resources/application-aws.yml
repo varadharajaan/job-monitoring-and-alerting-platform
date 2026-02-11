@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════════════════
+# AWS profile — Eureka Server
+# Activated via: SPRING_PROFILES_ACTIVE=aws
+# Uses: EKS internal DNS for peer awareness
+# ═══════════════════════════════════════════════════════════════
+
+server:
+  port: 8761
+
+eureka:
+  server:
+    enable-self-preservation: true
+    eviction-interval-timer-in-ms: 30000
+  instance:
+    prefer-ip-address: true
+    hostname: ${HOSTNAME:eureka-server}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.netflix.eureka: WARN
