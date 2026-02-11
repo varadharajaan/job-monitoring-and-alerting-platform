@@ -329,6 +329,28 @@ Phase 1 (Infrastructure):        Phase 2 (Platform):
 | `AZURE_STORAGE_CONNECTION_STRING` |         | Azure Storage account conn string    |
 | `AZURE_LOG_CONTAINER`             | `logs`  | Blob container for log uploads       |
 
+### 5.11 AWS Cloud (aws profile)
+
+| Variable                      | Default                                      | Description                     |
+|-------------------------------|----------------------------------------------|---------------------------------|
+| `AWS_RDS_URL`                 |                                              | RDS PostgreSQL JDBC URL         |
+| `AWS_RDS_USERNAME`            |                                              | RDS master username             |
+| `AWS_RDS_PASSWORD`            |                                              | RDS master password             |
+| `AWS_MSK_BOOTSTRAP`           |                                              | MSK TLS bootstrap brokers       |
+| `AWS_MSK_TRUSTSTORE_PASSWORD` |                                              | MSK SSL truststore password     |
+| `AWS_ELASTICACHE_HOST`        |                                              | ElastiCache Redis endpoint      |
+| `AWS_ELASTICACHE_PORT`        | `6379`                                       | ElastiCache port                |
+| `AWS_ELASTICACHE_PASSWORD`    |                                              | ElastiCache auth token          |
+| `AWS_ELASTICACHE_SSL`         | `true`                                       | Enable TLS for ElastiCache      |
+| `AWS_OPENSEARCH_ENDPOINT`     |                                              | OpenSearch HTTPS endpoint       |
+| `AWS_S3_BUCKET`               |                                              | S3 bucket for log storage       |
+| `AWS_REGION`                  | `us-east-1`                                  | AWS region                      |
+| `AWS_SES_SMTP_HOST`           | `email-smtp.us-east-1.amazonaws.com`         | SES SMTP endpoint               |
+| `AWS_SES_SMTP_USER`           |                                              | SES SMTP credentials            |
+| `AWS_SES_SMTP_PASSWORD`       |                                              | SES SMTP password               |
+| `AWS_SES_FROM_EMAIL`          |                                              | Verified SES sender email       |
+| `AWS_SNS_ALERT_TOPIC_ARN`    |                                              | SNS topic for alert fan-out     |
+
 ---
 
 ## 6. Spring Profiles
@@ -336,6 +358,7 @@ Phase 1 (Infrastructure):        Phase 2 (Platform):
 | Profile   | Description                                      | Usage                       |
 |----------|--------------------------------------------------|-----------------------------|
 | `local`  | Default. Debug logging, SQL logging, LocalStack  | `SPRING_PROFILES_ACTIVE=local` |
+| `aws`    | AWS cloud: MSK TLS, RDS, ElastiCache, OpenSearch | `SPRING_PROFILES_ACTIVE=aws`   |
 | `azure`  | Azure cloud: Event Hubs, Azure Redis, Azure PG   | `SPRING_PROFILES_ACTIVE=azure` |
 | `prod`   | Warn logging, higher pool sizes, real AWS        | `SPRING_PROFILES_ACTIVE=prod`  |
 | `native` | Config server file-based config                  | config-server only          |
@@ -397,7 +420,122 @@ Expected health response:
 
 ---
 
-## 8. Production Considerations
+## 8. Cloud Production Deployment (AWS & Azure)
+
+### 8.0 Infrastructure as Code
+
+Full Terraform modules exist for both clouds:
+
+```
+deploy/
+├── aws/terraform/              # AWS infrastructure
+│   ├── main.tf                 # Root module — VPC, EKS, RDS, MSK, etc.
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── prod.tfvars
+│   └── modules/
+│       ├── vpc/                # 3-AZ VPC, subnets, NAT Gateway
+│       ├── eks/                # EKS 1.29, managed node group, IRSA
+│       ├── rds/                # PostgreSQL 16 Multi-AZ, pg_stat_statements
+│       ├── redis/              # ElastiCache Redis 7.1, encryption
+│       ├── msk/                # MSK Kafka 3.7, TLS, custom config
+│       ├── opensearch/         # OpenSearch 2.11 (Elasticsearch-compatible)
+│       ├── ecr/                # Container registries (12 services)
+│       ├── s3/                 # Log storage with lifecycle policies
+│       ├── notifications/      # SES email + SNS topics
+│       └── alb/                # Application Load Balancer, TLS 1.3
+│
+└── azure/terraform/            # Azure infrastructure
+    ├── main.tf                 # Root module — RG, VNet, AKS, PG, etc.
+    ├── variables.tf
+    ├── outputs.tf
+    ├── prod.tfvars
+    └── modules/
+        ├── vnet/               # Virtual Network, subnets, NSGs
+        ├── aks/                # AKS cluster, Container Insights
+        ├── postgresql/         # Flexible Server PG 16, zone-redundant HA
+        ├── redis/              # Azure Cache for Redis, TLS 1.2
+        ├── eventhubs/          # Event Hubs (Kafka-compatible), 9093
+        ├── acr/                # Azure Container Registry
+        ├── storage/            # Blob Storage with lifecycle management
+        ├── search/             # Cognitive Search (Elasticsearch alternative)
+        ├── monitoring/         # Log Analytics + Application Insights
+        └── keyvault/           # Key Vault for secrets management
+```
+
+### 8.0.1 Deploy AWS Infrastructure
+
+```bash
+cd deploy/aws/terraform
+terraform init
+terraform plan -var-file=prod.tfvars
+terraform apply -var-file=prod.tfvars
+
+# Get kubeconfig
+aws eks update-kubeconfig --name jobmonitor-prod-cluster --region us-east-1
+```
+
+**AWS Service Mapping:**
+
+| Platform Need       | AWS Service                      | Terraform Module  |
+|---------------------|----------------------------------|-------------------|
+| Container Orchestration | EKS 1.29                    | `modules/eks`     |
+| Database            | RDS PostgreSQL 16 (Multi-AZ)     | `modules/rds`     |
+| Cache               | ElastiCache Redis 7.1            | `modules/redis`   |
+| Message Broker      | MSK Kafka 3.7 (TLS)             | `modules/msk`     |
+| Search/Logs         | OpenSearch 2.11                  | `modules/opensearch` |
+| Container Registry  | ECR                              | `modules/ecr`     |
+| Object Storage      | S3 (versioned, KMS, lifecycle)   | `modules/s3`      |
+| Load Balancer       | ALB (HTTPS, TLS 1.3)            | `modules/alb`     |
+| Email               | SES                              | `modules/notifications` |
+
+**Spring Profile:** `SPRING_PROFILES_ACTIVE=aws`
+
+### 8.0.2 Deploy Azure Infrastructure
+
+```bash
+cd deploy/azure/terraform
+terraform init
+terraform plan -var-file=prod.tfvars -var="db_password=YOUR_SECURE_PASSWORD"
+terraform apply -var-file=prod.tfvars -var="db_password=YOUR_SECURE_PASSWORD"
+
+# Get kubeconfig
+az aks get-credentials --resource-group rg-jobmonitor-prod --name aks-jobmonitor-prod
+```
+
+**Azure Service Mapping:**
+
+| Platform Need       | Azure Service                           | Terraform Module    |
+|---------------------|-----------------------------------------|---------------------|
+| Container Orchestration | AKS 1.29                           | `modules/aks`       |
+| Database            | PostgreSQL Flexible Server 16 (Zone HA) | `modules/postgresql`|
+| Cache               | Azure Cache for Redis (TLS 1.2)        | `modules/redis`     |
+| Message Broker      | Event Hubs (Kafka API, port 9093)      | `modules/eventhubs` |
+| Search/Logs         | Cognitive Search                        | `modules/search`    |
+| Container Registry  | ACR Premium                             | `modules/acr`       |
+| Object Storage      | Blob Storage (GRS, lifecycle)          | `modules/storage`   |
+| Monitoring          | App Insights + Log Analytics           | `modules/monitoring`|
+| Secrets             | Key Vault (RBAC, purge protection)     | `modules/keyvault`  |
+
+**Spring Profile:** `SPRING_PROFILES_ACTIVE=azure`
+
+### 8.0.3 CI/CD Pipelines (GitHub Actions)
+
+```
+.github/workflows/
+├── ci.yml              # Build + test on every PR (PostgreSQL + Redis services)
+├── deploy-aws.yml      # Build images → ECR → deploy to EKS (on push to main)
+├── deploy-azure.yml    # Build images → ACR → deploy to AKS (on push to main)
+└── infrastructure.yml  # Terraform plan on PR, apply on merge to main
+```
+
+**Required GitHub Secrets:**
+
+| Secret                  | AWS                          | Azure                       |
+|-------------------------|------------------------------|-----------------------------|
+| Role / Identity         | `AWS_DEPLOY_ROLE_ARN`       | `AZURE_CLIENT_ID`          |
+| Auth                    | `AWS_INFRA_ROLE_ARN`        | `AZURE_TENANT_ID`          |
+| Subscription            | —                            | `AZURE_SUBSCRIPTION_ID`    |
 
 ### 8.1 Security Checklist
 
