@@ -1,0 +1,14 @@
+apiVersion: v2
+name: job-monitoring-platform
+description: A Helm chart for the Job Monitoring & Alerting Platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0-SNAPSHOT"
+keywords:
+  - job-monitoring
+  - alerting
+  - observability
+  - spring-boot
+maintainers:
+  - name: Platform Team
+home: https://github.com/varadharajaan/job-monitoring-and-alerting-platform

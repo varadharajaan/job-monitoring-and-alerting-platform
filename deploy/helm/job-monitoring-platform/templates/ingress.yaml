@@ -1,0 +1,108 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jobmonitor-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "jobmonitor.labels" (dict "name" "ingress" "Release" .Release "Chart" .Chart "Values" .Values) | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          {{- if .Values.services.ingestionGateway.enabled }}
+          - path: /api/v1/ingest
+            pathType: Prefix
+            backend:
+              service:
+                name: ingestion-gateway
+                port:
+                  number: {{ .Values.services.ingestionGateway.port }}
+          {{- end }}
+          {{- if .Values.services.authService.enabled }}
+          - path: /api/v1/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: {{ .Values.services.authService.port }}
+          {{- end }}
+          {{- if .Values.services.jobMonitoringService.enabled }}
+          - path: /api/v1/jobs
+            pathType: Prefix
+            backend:
+              service:
+                name: job-monitoring-service
+                port:
+                  number: {{ .Values.services.jobMonitoringService.port }}
+          {{- end }}
+          {{- if .Values.services.alertingService.enabled }}
+          - path: /api/v1/alerts
+            pathType: Prefix
+            backend:
+              service:
+                name: alerting-service
+                port:
+                  number: {{ .Values.services.alertingService.port }}
+          {{- end }}
+          {{- if .Values.services.notificationService.enabled }}
+          - path: /api/v1/notifications
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: {{ .Values.services.notificationService.port }}
+          {{- end }}
+          {{- if .Values.services.jobQueueService.enabled }}
+          - path: /api/v1/queue
+            pathType: Prefix
+            backend:
+              service:
+                name: job-queue-service
+                port:
+                  number: {{ .Values.services.jobQueueService.port }}
+          {{- end }}
+          {{- if .Values.services.logIngestionService.enabled }}
+          - path: /api/v1/logs
+            pathType: Prefix
+            backend:
+              service:
+                name: log-ingestion-service
+                port:
+                  number: {{ .Values.services.logIngestionService.port }}
+          {{- end }}
+          {{- if .Values.services.dbPerformanceService.enabled }}
+          - path: /api/v1/db-performance
+            pathType: Prefix
+            backend:
+              service:
+                name: db-performance-service
+                port:
+                  number: {{ .Values.services.dbPerformanceService.port }}
+          {{- end }}
+    {{- if .Values.services.eurekaServer.enabled }}
+    - host: eureka.{{ .Values.ingress.host | trimPrefix "api." }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eureka-server
+                port:
+                  number: {{ .Values.services.eurekaServer.port }}
+    {{- end }}
+{{- end }}

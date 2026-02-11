@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jobmonitor.com/schemas/api/error-response.json",
+  "title": "ErrorResponse",
+  "description": "Standard API error response returned by GlobalExceptionHandler",
+  "type": "object",
+  "required": ["status", "error", "message", "timestamp", "path"],
+  "properties": {
+    "status": {
+      "type": "integer",
+      "description": "HTTP status code"
+    },
+    "error": {
+      "type": "string",
+      "description": "HTTP status reason phrase (e.g., 'Not Found', 'Bad Request')"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable error description"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of when the error occurred"
+    },
+    "path": {
+      "type": "string",
+      "description": "Request URI that produced the error"
+    },
+    "traceId": {
+      "type": ["string", "null"],
+      "description": "Distributed trace ID for debugging"
+    },
+    "validationErrors": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": { "type": "string" },
+          "message": { "type": "string" },
+          "rejectedValue": {}
+        }
+      },
+      "description": "Field-level validation errors (present on 400 responses)"
+    }
+  },
+  "additionalProperties": false
+}

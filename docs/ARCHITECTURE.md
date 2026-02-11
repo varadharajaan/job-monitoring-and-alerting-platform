@@ -26,6 +26,7 @@
 17. [Service Discovery Architecture](#17-service-discovery-architecture)
 18. [Azure Dual-Cloud Architecture](#18-azure-dual-cloud-architecture)
 19. [Scheduled Tasks & Background Processing](#19-scheduled-tasks--background-processing)
+20. [Architecture Decision Records](#20-architecture-decision-records)
 
 ---
 
@@ -918,3 +919,20 @@ Every response follows ApiError JSON:
 |                                                                   |
 +------------------------------------------------------------------+
 ```
+
+---
+
+## 20. Architecture Decision Records
+
+Key architectural decisions are documented as ADRs in [`docs/adr/`](adr/).
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-001](adr/ADR-001-gradle-multi-module-monorepo.md) | Gradle Multi-Module Monorepo | Accepted |
+| [ADR-002](adr/ADR-002-event-driven-architecture-kafka.md) | Event-Driven Architecture with Kafka | Accepted |
+| [ADR-003](adr/ADR-003-timescaledb-over-plain-postgresql.md) | TimescaleDB over Plain PostgreSQL | Accepted |
+| [ADR-004](adr/ADR-004-jwt-authentication-multi-tenancy.md) | JWT Auth with Multi-Tenancy | Accepted |
+| [ADR-005](adr/ADR-005-spring-cloud-config-service-discovery.md) | Spring Cloud Config + Eureka | Accepted |
+| [ADR-006](adr/ADR-006-dual-cloud-aws-azure-terraform.md) | Dual-Cloud (AWS + Azure) with Terraform | Accepted |
+| [ADR-007](adr/ADR-007-observability-prometheus-grafana-zipkin.md) | Observability — Prometheus, Grafana, Zipkin | Accepted |
+| [ADR-008](adr/ADR-008-testcontainers-integration-testing.md) | Testcontainers for Integration Testing | Accepted |

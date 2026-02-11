@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jobmonitor.com/schemas/events/notification-event.json",
+  "title": "NotificationEvent",
+  "description": "Event emitted by notification-service for notification delivery lifecycle",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "eventType": { "const": "NOTIFICATION" }
+      }
+    }
+  ],
+  "required": ["eventId", "eventType", "timestamp", "source", "tenantId", "notificationId", "action", "channel", "recipient"],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "type": "string",
+      "const": "NOTIFICATION"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "const": "notification-service"
+    },
+    "tenantId": {
+      "type": "string"
+    },
+    "correlationId": {
+      "type": ["string", "null"]
+    },
+    "notificationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of this notification"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["REQUESTED", "QUEUED", "SENT", "DELIVERED", "FAILED", "BOUNCED"],
+      "description": "Notification delivery lifecycle action"
+    },
+    "channel": {
+      "type": "string",
+      "enum": ["EMAIL", "SMS", "SLACK", "PUSH", "WEBHOOK"],
+      "description": "Delivery channel"
+    },
+    "templateId": {
+      "type": ["string", "null"],
+      "description": "Template identifier used for rendering"
+    },
+    "recipient": {
+      "type": "string",
+      "description": "Recipient address (email, phone, Slack channel, webhook URL)"
+    },
+    "subject": {
+      "type": ["string", "null"],
+      "description": "Notification subject line"
+    },
+    "templateVariables": {
+      "type": "object",
+      "additionalProperties": {},
+      "description": "Variables for template rendering"
+    },
+    "providerMessageId": {
+      "type": ["string", "null"],
+      "description": "Message ID returned by the delivery provider (SES, Twilio, etc.)"
+    },
+    "failureReason": {
+      "type": ["string", "null"],
+      "description": "Reason for delivery failure when action is FAILED or BOUNCED"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "eventId": "dd0e8400-e29b-41d4-a716-446655440020",
+      "eventType": "NOTIFICATION",
+      "timestamp": "2026-01-15T10:32:00Z",
+      "source": "notification-service",
+      "tenantId": "tenant-acme",
+      "correlationId": "req-abc-123",
+      "notificationId": "ee0e8400-e29b-41d4-a716-446655440021",
+      "action": "SENT",
+      "channel": "EMAIL",
+      "templateId": "alert-notification-v1",
+      "recipient": "ops-team@acme.com",
+      "subject": "Alert: ETL Pipeline Failed",
+      "templateVariables": {
+        "alertName": "ETL Pipeline Failed",
+        "severity": "HIGH",
+        "timestamp": "2026-01-15T10:31:00Z"
+      },
+      "providerMessageId": "ses-msg-abc123",
+      "failureReason": null
+    }
+  ]
+}

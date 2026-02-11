@@ -72,3 +72,6 @@ docker-compose.override.yml
 .fake
 *.bak
 *.tmp
+
+
+test-output*

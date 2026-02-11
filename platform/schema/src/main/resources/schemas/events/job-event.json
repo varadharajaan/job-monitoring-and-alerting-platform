@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jobmonitor.com/schemas/events/job-event.json",
+  "title": "JobEvent",
+  "description": "Event emitted by job-monitoring-service for job lifecycle state transitions",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "eventType": { "const": "JOB" }
+      }
+    }
+  ],
+  "required": ["eventId", "eventType", "timestamp", "source", "tenantId", "jobId", "action", "jobName"],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "type": "string",
+      "const": "JOB"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "const": "job-monitoring-service"
+    },
+    "tenantId": {
+      "type": "string"
+    },
+    "correlationId": {
+      "type": ["string", "null"]
+    },
+    "jobId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of the job definition"
+    },
+    "executionId": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Unique identifier of this specific execution run"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["REGISTERED", "STARTED", "COMPLETED", "FAILED", "SLA_VIOLATED", "RETRYING", "HEARTBEAT_MISSED"],
+      "description": "Job lifecycle action that triggered this event"
+    },
+    "jobName": {
+      "type": "string",
+      "description": "Human-readable name of the job"
+    },
+    "cronExpression": {
+      "type": ["string", "null"],
+      "description": "Cron expression for scheduled jobs (e.g., '0 */5 * * *')"
+    },
+    "exitCode": {
+      "type": ["integer", "null"],
+      "description": "Process exit code (0 = success, non-zero = failure)"
+    },
+    "errorMessage": {
+      "type": ["string", "null"],
+      "description": "Error message when action is FAILED"
+    },
+    "executionStartTime": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the job execution started"
+    },
+    "executionEndTime": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the job execution ended"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Arbitrary key-value metadata attached to the job event"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "eventId": "550e8400-e29b-41d4-a716-446655440000",
+      "eventType": "JOB",
+      "timestamp": "2026-01-15T10:30:00Z",
+      "source": "job-monitoring-service",
+      "tenantId": "tenant-acme",
+      "correlationId": "req-abc-123",
+      "jobId": "660e8400-e29b-41d4-a716-446655440001",
+      "executionId": "770e8400-e29b-41d4-a716-446655440002",
+      "action": "COMPLETED",
+      "jobName": "daily-etl-pipeline",
+      "cronExpression": "0 0 2 * * *",
+      "exitCode": 0,
+      "errorMessage": null,
+      "executionStartTime": "2026-01-15T02:00:00Z",
+      "executionEndTime": "2026-01-15T02:15:30Z",
+      "metadata": {
+        "environment": "production",
+        "region": "us-east-1"
+      }
+    }
+  ]
+}

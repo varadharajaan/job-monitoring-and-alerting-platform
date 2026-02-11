@@ -1,0 +1,21 @@
+1. Verify the chart is valid:
+   helm lint deploy/helm/job-monitoring-platform
+
+2. Render templates locally:
+   helm template my-release deploy/helm/job-monitoring-platform
+
+3. Install to a cluster:
+   helm install jobmonitor deploy/helm/job-monitoring-platform \
+     --namespace jobmonitor --create-namespace \
+     --set global.imageRegistry=123456789.dkr.ecr.us-east-1.amazonaws.com \
+     --set global.imageTag=abc1234 \
+     --set secrets.database.password=REAL_PASSWORD \
+     --set secrets.jwt.secret=REAL_JWT_SECRET
+
+4. Upgrade after image rebuild:
+   helm upgrade jobmonitor deploy/helm/job-monitoring-platform \
+     --set global.imageTag=NEW_SHA
+
+5. Use a custom values file for production:
+   helm install jobmonitor deploy/helm/job-monitoring-platform \
+     -f deploy/helm/values-production.yaml

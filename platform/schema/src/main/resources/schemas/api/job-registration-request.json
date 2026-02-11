@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jobmonitor.com/schemas/api/job-registration-request.json",
+  "title": "JobRegistrationRequest",
+  "description": "Request body for POST /api/v1/jobs — register a new job for monitoring",
+  "type": "object",
+  "required": ["name", "type"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Human-readable job name"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["CRON", "EVENT_DRIVEN", "MANUAL", "CONTINUOUS"],
+      "description": "Job scheduling type"
+    },
+    "cronExpression": {
+      "type": ["string", "null"],
+      "description": "Cron expression (required for CRON type)"
+    },
+    "description": {
+      "type": ["string", "null"],
+      "maxLength": 1000
+    },
+    "owner": {
+      "type": ["string", "null"],
+      "description": "Owner email or team name"
+    },
+    "slaThresholdSeconds": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Maximum allowed execution time in seconds before SLA violation"
+    },
+    "tags": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Arbitrary tags for categorization and filtering"
+    }
+  },
+  "additionalProperties": false
+}

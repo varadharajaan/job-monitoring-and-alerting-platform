@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jobmonitor.com/schemas/events/queue-event.json",
+  "title": "QueueEvent",
+  "description": "Event emitted by job-queue-service for queued job processing lifecycle",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "eventType": { "const": "QUEUE" }
+      }
+    }
+  ],
+  "required": ["eventId", "eventType", "timestamp", "source", "tenantId", "queuedJobId", "action", "jobType", "priority"],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "type": "string",
+      "const": "QUEUE"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "const": "job-queue-service"
+    },
+    "tenantId": {
+      "type": "string"
+    },
+    "correlationId": {
+      "type": ["string", "null"]
+    },
+    "queuedJobId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of the queued job item"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["ENQUEUED", "PROCESSING", "COMPLETED", "FAILED", "RETRYING", "CANCELLED", "TIMED_OUT"],
+      "description": "Queue processing lifecycle action"
+    },
+    "jobType": {
+      "type": "string",
+      "description": "Type/category of the queued job (e.g., 'DATA_EXPORT', 'REPORT_GENERATION')"
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Job priority (0 = lowest, 10 = highest)"
+    },
+    "attemptNumber": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Current attempt number (starts at 1, increments on retry)"
+    },
+    "workerNodeId": {
+      "type": ["string", "null"],
+      "description": "Identifier of the worker node processing this job"
+    },
+    "errorMessage": {
+      "type": ["string", "null"],
+      "description": "Error message when action is FAILED"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": {},
+      "description": "Arbitrary job payload data"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "eventId": "ff0e8400-e29b-41d4-a716-446655440030",
+      "eventType": "QUEUE",
+      "timestamp": "2026-01-15T10:33:00Z",
+      "source": "job-queue-service",
+      "tenantId": "tenant-acme",
+      "correlationId": null,
+      "queuedJobId": "110e8400-e29b-41d4-a716-446655440031",
+      "action": "ENQUEUED",
+      "jobType": "DATA_EXPORT",
+      "priority": 5,
+      "attemptNumber": 1,
+      "workerNodeId": null,
+      "errorMessage": null,
+      "payload": {
+        "format": "CSV",
+        "dateRange": "2026-01-01/2026-01-15",
+        "outputPath": "s3://exports/tenant-acme/report.csv"
+      }
+    }
+  ]
+}

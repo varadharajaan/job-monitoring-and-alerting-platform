@@ -1,0 +1,39 @@
+# ═══════════════════════════════════════════════════════════════════
+#  All Platform Services — Deployments + Services
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Eureka Server ─────────────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "eureka-server" "svc" .Values.services.eurekaServer "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Config Server ─────────────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "config-server" "svc" .Values.services.configServer "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Auth Service ──────────────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "auth-service" "svc" .Values.services.authService "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Ingestion Gateway ────────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "ingestion-gateway" "svc" .Values.services.ingestionGateway "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Job Monitoring Service ────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "job-monitoring-service" "svc" .Values.services.jobMonitoringService "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Alerting Service ──────────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "alerting-service" "svc" .Values.services.alertingService "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Notification Service ──────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "notification-service" "svc" .Values.services.notificationService "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Job Queue Service ─────────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "job-queue-service" "svc" .Values.services.jobQueueService "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Log Ingestion Service ─────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "log-ingestion-service" "svc" .Values.services.logIngestionService "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── DB Performance Service ────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "db-performance-service" "svc" .Values.services.dbPerformanceService "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Job Worker ────────────────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "job-worker" "svc" .Values.services.jobWorker "Values" .Values "Release" .Release "Chart" .Chart) }}
+---
+# ── Notification Worker ───────────────────────────────────────────
+{{ include "jobmonitor.service" (dict "name" "notification-worker" "svc" .Values.services.notificationWorker "Values" .Values "Release" .Release "Chart" .Chart) }}

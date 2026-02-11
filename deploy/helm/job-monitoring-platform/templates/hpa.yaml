@@ -1,0 +1,33 @@
+{{- if .Values.autoscaling.enabled }}
+{{- $services := list "ingestion-gateway" "auth-service" "job-monitoring-service" "alerting-service" "notification-service" "job-queue-service" "log-ingestion-service" "job-worker" "notification-worker" }}
+{{- range $svc := $services }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $svc }}-hpa
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    {{- include "jobmonitor.labels" (dict "name" $svc "Release" $.Release "Chart" $.Chart "Values" $.Values) | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $svc }}
+  minReplicas: {{ $.Values.autoscaling.minReplicas }}
+  maxReplicas: {{ $.Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.autoscaling.targetMemory }}
+---
+{{- end }}
+{{- end }}

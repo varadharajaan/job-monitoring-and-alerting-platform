@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jobmonitor.com/schemas/events/alert-event.json",
+  "title": "AlertEvent",
+  "description": "Event emitted by alerting-service for alert lifecycle transitions",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "eventType": { "const": "ALERT" }
+      }
+    }
+  ],
+  "required": ["eventId", "eventType", "timestamp", "source", "tenantId", "alertId", "ruleId", "action", "severity", "alertName"],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "type": "string",
+      "const": "ALERT"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "const": "alerting-service"
+    },
+    "tenantId": {
+      "type": "string"
+    },
+    "correlationId": {
+      "type": ["string", "null"]
+    },
+    "alertId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of this alert instance"
+    },
+    "ruleId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Alert rule that triggered this alert"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["TRIGGERED", "ACKNOWLEDGED", "RESOLVED", "ESCALATED"],
+      "description": "Alert lifecycle action"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "Severity level of the alert"
+    },
+    "alertName": {
+      "type": "string",
+      "description": "Human-readable alert name"
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Detailed description of the alert condition"
+    },
+    "channels": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Notification channels for this alert (e.g., ['EMAIL', 'SLACK'])"
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Contextual key-value data about the alert condition"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "eventId": "aa0e8400-e29b-41d4-a716-446655440010",
+      "eventType": "ALERT",
+      "timestamp": "2026-01-15T10:31:00Z",
+      "source": "alerting-service",
+      "tenantId": "tenant-acme",
+      "correlationId": "req-abc-123",
+      "alertId": "bb0e8400-e29b-41d4-a716-446655440011",
+      "ruleId": "cc0e8400-e29b-41d4-a716-446655440012",
+      "action": "TRIGGERED",
+      "severity": "HIGH",
+      "alertName": "ETL Pipeline Failed",
+      "description": "daily-etl-pipeline failed with exit code 1",
+      "channels": ["EMAIL", "SLACK"],
+      "context": {
+        "jobName": "daily-etl-pipeline",
+        "exitCode": "1"
+      }
+    }
+  ]
+}

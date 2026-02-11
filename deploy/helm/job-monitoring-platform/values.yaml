@@ -1,0 +1,220 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Job Monitoring Platform — Helm Values
+# ═══════════════════════════════════════════════════════════════════
+
+global:
+  namespace: jobmonitor
+  imageRegistry: ""          # e.g., "123456789.dkr.ecr.us-east-1.amazonaws.com" or "myacr.azurecr.io"
+  imageTag: "latest"
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+# ── Shared Configuration ──────────────────────────────────────────
+config:
+  database:
+    url: "jdbc:postgresql://postgres-service:5432/jobmonitor"
+    poolSize: "10"
+    poolMinIdle: "2"
+  kafka:
+    bootstrapServers: "kafka-service:9092"
+  redis:
+    host: "redis-service"
+    port: "6379"
+  eureka:
+    enabled: "true"
+    url: "http://eureka:eureka@eureka-service:8761/eureka/"
+  aws:
+    region: "us-east-1"
+  smtp:
+    host: "mailhog-service"
+    port: "1025"
+    auth: "false"
+    tls: "false"
+  springProfile: "k8s"
+
+# ── Secrets ───────────────────────────────────────────────────────
+secrets:
+  database:
+    username: "jobmonitor"
+    password: "changeme"
+  jwt:
+    secret: "changeme-jwt-secret-at-least-32-characters-long"
+  eureka:
+    username: "eureka"
+    password: "eureka"
+
+# ── Services ──────────────────────────────────────────────────────
+services:
+  eurekaServer:
+    enabled: true
+    replicas: 1
+    port: 8761
+    image: "jobmonitor/eureka-server"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 300m
+        memory: 384Mi
+
+  configServer:
+    enabled: true
+    replicas: 1
+    port: 8888
+    image: "jobmonitor/config-server"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 300m
+        memory: 384Mi
+
+  authService:
+    enabled: true
+    replicas: 2
+    port: 8081
+    image: "jobmonitor/auth-service"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  ingestionGateway:
+    enabled: true
+    replicas: 2
+    port: 8080
+    image: "jobmonitor/ingestion-gateway"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  jobMonitoringService:
+    enabled: true
+    replicas: 2
+    port: 8082
+    image: "jobmonitor/job-monitoring-service"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  alertingService:
+    enabled: true
+    replicas: 2
+    port: 8083
+    image: "jobmonitor/alerting-service"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  notificationService:
+    enabled: true
+    replicas: 2
+    port: 8084
+    image: "jobmonitor/notification-service"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  jobQueueService:
+    enabled: true
+    replicas: 2
+    port: 8085
+    image: "jobmonitor/job-queue-service"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  logIngestionService:
+    enabled: true
+    replicas: 2
+    port: 8086
+    image: "jobmonitor/log-ingestion-service"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  dbPerformanceService:
+    enabled: true
+    replicas: 1
+    port: 8087
+    image: "jobmonitor/db-performance-service"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  jobWorker:
+    enabled: true
+    replicas: 2
+    port: 8090
+    image: "jobmonitor/job-worker"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  notificationWorker:
+    enabled: true
+    replicas: 2
+    port: 8091
+    image: "jobmonitor/notification-worker"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# ── Ingress ───────────────────────────────────────────────────────
+ingress:
+  enabled: true
+  className: nginx
+  host: api.jobmonitor.example.com
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit-connections: "50"
+  tls: []
+
+# ── HPA (Horizontal Pod Autoscaler) ──────────────────────────────
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPU: 70
+  targetMemory: 80

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jobmonitor.com/schemas/events/platform-event.json",
+  "title": "PlatformEvent",
+  "description": "Abstract base schema for all platform events. Concrete events extend this with additional fields.",
+  "type": "object",
+  "discriminator": {
+    "propertyName": "eventType"
+  },
+  "required": ["eventId", "eventType", "timestamp", "source", "tenantId"],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this event instance"
+    },
+    "eventType": {
+      "type": "string",
+      "enum": ["JOB", "ALERT", "NOTIFICATION", "QUEUE"],
+      "description": "Discriminator — determines which concrete event schema applies"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the event was created"
+    },
+    "source": {
+      "type": "string",
+      "description": "Service that produced this event (e.g., 'job-monitoring-service')"
+    },
+    "tenantId": {
+      "type": "string",
+      "description": "Tenant identifier for multi-tenancy isolation"
+    },
+    "correlationId": {
+      "type": ["string", "null"],
+      "description": "Optional correlation ID for distributed tracing"
+    }
+  },
+  "oneOf": [
+    { "$ref": "job-event.json" },
+    { "$ref": "alert-event.json" },
+    { "$ref": "notification-event.json" },
+    { "$ref": "queue-event.json" }
+  ]
+}
