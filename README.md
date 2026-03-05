@@ -11,46 +11,45 @@ A unified, production-grade enterprise platform for **scheduled job monitoring**
 ## Architecture
 
 ```
-+-----------+     +-----------+     +-----------+
-| Dashboard |     | CLI / SDK |     | External  |
-|   (SPA)   |     |  Clients  |     | Webhooks  |
-+-----+-----+     +-----+-----+     +-----+-----+
-      |                 |                 |
-      +--------+--------+---------+-------+
-               |    HTTPS / JWT   |
-      +--------v------------------v--------+
-      |      Ingestion Gateway (:8080)     |
-      |   Rate Limiting  |  JWT Validation |
-      +----+----+----+----+----+----+------+
-           |    |    |    |    |    |
-     +-----+ +--+ +--+ +--+ +--+ +--+
-     |       |    |    |    |    |
-     v       v    v    v    v    v
-  +------+ +----+ +--+ +--+ +--+ +--------+
-  | Auth | | Job| |Al-| |No-| |Qu-| |Config |
-  | Svc  | | Mon| |ert| |tif| |eue| |Server |
-  | 8081 | | 8082| |8083| |8084| |8085| | 8888  |
-  +------+ +--+-+ +-+--+ +-+--+ +-+--+ +--------+
-               |    |      |      |
-               v    v      v      v
-      +--------+----+------+------+--------+
-      |          Kafka Event Bus           |
-      |     (KRaft mode, 6 topics)         |
-      +----+-------------------+-----------+
-           |                   |
-     +-----v-----+      +-----v------+
-     | Job Worker |      | Notif      |
-     | (headless) |      | Worker     |
-     +-----+------+      +-----+------+
-           |                    |
-+----------+--------------------+-----------+
-|                                           |
-|  +------------+ +-------+ +------------+  |
-|  | TimescaleDB| | Redis | | LocalStack |  |
-|  | (pg16)     | | 7     | | (S3)       |  |
-|  +------------+ +-------+ +------------+  |
-|                                           |
-+-------------------------------------------+
++-------------+       +-------------+       +-------------+
+|  Dashboard  |       |  CLI / SDK  |       |  External   |
+|    (SPA)    |       |   Clients   |       |  Webhooks   |
++------+------+       +------+------+       +------+------+
+       |                     |                     |
+       +----------+----------+----------+----------+
+                  |     HTTPS / JWT     |
+       +----------v---------------------v----------+
+       |       Ingestion Gateway (:8080)           |
+       |    Rate Limiting  |  JWT Validation       |
+       +---+-----+-----+-----+-----+-----+--------+
+           |     |     |     |     |     |
+           v     v     v     v     v     v
+       +------+------+------+------+------+--------+
+       | Auth | Job  | Ale- | Noti-| Job  | Config |
+       | Svc  | Mon  | rtin | fica | Queu | Server |
+       |      |      |  g   | tion |  e   |        |
+       | 8081 | 8082 | 8083 | 8084 | 8085 |  8888  |
+       +------+--+---+--+---+--+---+--+---+--------+
+                  |      |      |      |
+                  v      v      v      v
+       +----------+------+------+------+------------+
+       |           Kafka Event Bus                  |
+       |        (KRaft mode, 6 topics)              |
+       +--------+-----------------------+-----------+
+                |                       |
+       +--------v--------+    +--------v---------+
+       |   Job Worker    |    |  Notif Worker    |
+       |   (headless)    |    |   (headless)     |
+       +--------+--------+    +--------+---------+
+                |                      |
+   +------------+----------------------+-------------+
+   |                                                 |
+   |  +--------------+  +---------+  +--------------+|
+   |  | TimescaleDB  |  |  Redis  |  |  LocalStack  ||
+   |  |   (pg16)     |  |    7    |  |    (S3)      ||
+   |  +--------------+  +---------+  +--------------+|
+   |                                                 |
+   +-------------------------------------------------+
 ```
 
 ## Modules
@@ -81,24 +80,24 @@ job-monitoring-and-alerting-platform/
 
 ## Tech Stack
 
-| Category       | Technology                                         |
-|---------------|---------------------------------------------------|
-| **Runtime**   | Java 17 (language features restricted to Java 11)  |
-| **Framework** | Spring Boot 3.2.5, Spring Cloud 2023.0.1           |
-| **Build**     | Gradle 8.7, multi-module with shared conventions   |
-| **Messaging** | Apache Kafka 3.7.0 (KRaft mode, no ZooKeeper)     |
-| **Database**  | PostgreSQL 16 + TimescaleDB (hypertables, aggregates) |
-| **Cache**     | Redis 7 (5 named caches, rate limiting)            |
-| **Cloud**     | AWS SDK 2.25.16, LocalStack (S3 log archive)       |
-| **Cloud Alt** | Azure (Event Hubs, Cache for Redis, PG, Blob)      |
-| **Discovery** | Spring Cloud Netflix Eureka                         |
-| **Security**  | jjwt 0.12.5, Bucket4j rate limiting                |
-| **Resilience**| Resilience4j 2.2.0                                 |
-| **Mapping**   | MapStruct 1.5.5                                    |
-| **Docs**      | SpringDoc OpenAPI 2.5.0                            |
-| **Testing**   | Testcontainers 1.19.7, WireMock                   |
-| **Logging**   | Logstash JSON Encoder 7.4, S3 JSONL archive       |
-| **Monitoring**| Prometheus + Grafana                               |
+| Category        | Technology                                            |
+|-----------------|-------------------------------------------------------|
+| **Runtime**     | Java 17 (language features restricted to Java 11)     |
+| **Framework**   | Spring Boot 3.2.5, Spring Cloud 2023.0.1              |
+| **Build**       | Gradle 8.7, multi-module with shared conventions      |
+| **Messaging**   | Apache Kafka 3.7.0 (KRaft mode, no ZooKeeper)         |
+| **Database**    | PostgreSQL 16 + TimescaleDB (hypertables, aggregates) |
+| **Cache**       | Redis 7 (5 named caches, rate limiting)               |
+| **Cloud**       | AWS SDK 2.25.16, LocalStack (S3 log archive)          |
+| **Cloud Alt**   | Azure (Event Hubs, Cache for Redis, PG, Blob)         |
+| **Discovery**   | Spring Cloud Netflix Eureka                           |
+| **Security**    | jjwt 0.12.5, Bucket4j rate limiting                   |
+| **Resilience**  | Resilience4j 2.2.0                                    |
+| **Mapping**     | MapStruct 1.5.5                                       |
+| **Docs**        | SpringDoc OpenAPI 2.5.0                               |
+| **Testing**     | Testcontainers 1.19.7, WireMock                       |
+| **Logging**     | Logstash JSON Encoder 7.4, S3 JSONL archive           |
+| **Monitoring**  | Prometheus + Grafana                                  |
 
 ## Quick Start
 
