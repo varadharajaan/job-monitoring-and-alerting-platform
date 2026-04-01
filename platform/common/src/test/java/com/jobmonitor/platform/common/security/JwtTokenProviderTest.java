@@ -1,15 +1,10 @@
 package com.jobmonitor.platform.common.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 

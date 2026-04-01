@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Ingestion service — validates, transforms, and publishes job events to Kafka.
